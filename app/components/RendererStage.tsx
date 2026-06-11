@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import SeaSky from "./SeaSky";
 import Ocean from "./Ocean";
 import Controls from "./Controls";
+import Establishing from "./Establishing";
 import { loadTerrain } from "@/lib/terrain";
 import type { Conditions } from "@/lib/ndbc";
 
@@ -13,8 +14,12 @@ export type RenderMode = "loading" | "2d" | "3d";
 const ModeContext = createContext<RenderMode>("loading");
 export const useRenderMode = () => useContext(ModeContext);
 
-// The entire three.js scene is code-split behind the landing frame.
-const CoastBackground = dynamic(() => import("./three/CoastBackground"), { ssr: false });
+// The entire three.js scene is code-split behind the landing frame. While the
+// chunk streams, the scene area keeps the branded establishing state.
+const CoastBackground = dynamic(() => import("./three/CoastBackground"), {
+  ssr: false,
+  loading: () => <Establishing />,
+});
 
 /**
  * Decides the renderer once on the client (DESIGN-PHASE2.md §3): the 3D coast only
@@ -71,13 +76,7 @@ export default function RendererStage({
       {/* z-0 wrapper (owned by CoastBackground) so the canvas receives pointer events;
           the chrome (nav z-15, header z-20, panel z-30) stays above it. */}
       {mode === "3d" && <CoastBackground conditions={effective} />}
-      {mode === "loading" && (
-        <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-[42%] z-0 flex justify-center">
-          <span className="font-mono text-[11px] uppercase tracking-[0.3em] text-[color:var(--ink)]/60">
-            establishing conditions...
-          </span>
-        </div>
-      )}
+      {mode === "loading" && <Establishing />}
       {children}
       {mode !== "loading" && <Controls live={conditions} override={override} setOverride={setOverride} />}
     </ModeContext.Provider>
