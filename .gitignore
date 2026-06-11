@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# terrain tile cache (assets in public/terrain are committed)
+/.terrain-cache

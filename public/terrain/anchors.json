@@ -1,0 +1,57 @@
+[
+  {
+    "slug": "about",
+    "label": "About",
+    "place": "STINSON",
+    "lat": 37.9,
+    "lng": -122.72,
+    "x": -4.447,
+    "z": -4.725,
+    "elevMeters": -12,
+    "terrainY": -0.02
+  },
+  {
+    "slug": "resume",
+    "label": "Resume",
+    "place": "OCEAN BEACH",
+    "lat": 37.7,
+    "lng": -122.57,
+    "x": -2.456,
+    "z": -1.35,
+    "elevMeters": -174,
+    "terrainY": -0.296
+  },
+  {
+    "slug": "projects",
+    "label": "Projects",
+    "place": "MAVERICKS",
+    "lat": 37.5,
+    "lng": -122.54,
+    "x": -2.058,
+    "z": 2.025,
+    "elevMeters": -272,
+    "terrainY": -0.462
+  },
+  {
+    "slug": "contact",
+    "label": "Contact",
+    "place": "HALF MOON BAY",
+    "lat": 37.44,
+    "lng": -122.55,
+    "x": -2.19,
+    "z": 3.038,
+    "elevMeters": -353,
+    "terrainY": -0.6
+  },
+  {
+    "slug": "ask",
+    "label": "Ask Nate",
+    "place": "STN 46012",
+    "lat": 37.36,
+    "lng": -122.88,
+    "x": -6.571,
+    "z": 4.388,
+    "elevMeters": -360,
+    "terrainY": -0.612
+  }
+]

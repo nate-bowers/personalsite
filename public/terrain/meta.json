@@ -1,0 +1,19 @@
+{
+  "z": 11,
+  "bbox": {
+    "lngMin": -122.95,
+    "lngMax": -121.82,
+    "latMin": 37.22,
+    "latMax": 38.02
+  },
+  "width": 1024,
+  "height": 896,
+  "sceneWidth": 15,
+  "sceneDepth": 13.5,
+  "seaLevel": 0,
+  "yScale": 0.0017,
+  "oceanClampM": -60,
+  "elevMin": -360,
+  "elevMax": 1052,
+  "source": "AWS Open Data Terrarium terrain tiles (USGS-derived elevation)"
+}

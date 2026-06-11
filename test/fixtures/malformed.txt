@@ -1,0 +1,3 @@
+<!DOCTYPE html>
+<html><head><title>404 Not Found</title></head>
+<body>The requested station data could not be located. FTP hiccup.</body></html>

@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+  The Coast — golden hour, LOCKED (DESIGN-PHASE2.md §1).
+  The four time-of-day palettes from v1 are retired; one art direction, executed well.
+  Night mode is a backlog variant. Tokens are plain (no time-based switching).
+*/
+
+:root { color-scheme: dark; }
+
+body {
+  --sky-zenith: #46406f; /* deep violet overhead */
+  --sky-low: #eaa86a;    /* warm orange horizon band */
+  --sun-glow: #ffd79c;
+  --water-far: #3a3357;  /* violet sea at distance */
+  --water-near: #244a63; /* deeper blue near camera */
+  --glitter: #ffbe78;    /* golden sun path on water */
+  --land-lit: #c97b4a;   /* sunlit terrain faces */
+  --land-shade: #3d3357; /* shadowed faces */
+  --fog: #e2ab7e;        /* warm atmospheric haze */
+  --ink: #fbf3e4;        /* warm off-white text */
+  --accent: #ff7847;     /* buoy orange */
+
+  /* Readable station-report surface for panels (warm paper over the warm scene). */
+  --panel-bg: #f7efe3;
+  --panel-ink: #2a2440;
+  --panel-muted: #6b6480;
+  --panel-line: #e2d7c7;
+
+  background: var(--water-near);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Type roles (fonts wired via next/font in layout.tsx) */
+.font-display { font-family: var(--font-display), Georgia, serif; }
+.font-body    { font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif; }
+.font-mono    { font-family: var(--font-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* No-JS fallback: never leave interactive content hidden behind a transform. */
+.no-js [data-animated] { transform: none !important; opacity: 1 !important; }
+.no-js .ocean-canvas { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
 }
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 0.9; transform: none; }
+}
+
+/* Buoys bob independently (phase offset set inline per buoy). */
+.buoy-bob { animation: bob 4.2s ease-in-out infinite; }
+
+/* Visible focus ring everywhere. A two-tone halo (light + dark) guarantees >=3:1
+   non-text contrast (WCAG 2.4.11) over both the light and deep water/terrain. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9), 0 0 0 6px rgba(0, 0, 0, 0.55);
+  border-radius: 4px;
+}
+
+.station-panel { box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.34); }
+
+/* Readable prose inside panels (no typography plugin). */
+.station-prose { font-size: 1.0625rem; line-height: 1.6; }
+.station-prose > * + * { margin-top: 0.9em; }
+.station-prose h2 { font-family: var(--font-display), Georgia, serif; font-size: 1.55rem; line-height: 1.15; }
+.station-prose h3 { font-weight: 600; font-size: 1.1rem; }
+.station-prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.station-prose ul { list-style: disc; padding-left: 1.25rem; }
+.station-prose li + li { margin-top: 0.3em; }
+.station-prose strong { font-weight: 600; }
+.station-prose code { font-family: var(--font-mono), ui-monospace, monospace; font-size: 0.9em; }
