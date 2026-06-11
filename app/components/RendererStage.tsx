@@ -1,10 +1,11 @@
 "use client";
 
-import { createContext, useContext, useState, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import SeaSky from "./SeaSky";
 import Ocean from "./Ocean";
 import Controls from "./Controls";
+import { loadTerrain } from "@/lib/terrain";
 import type { Conditions } from "@/lib/ndbc";
 
 export type RenderMode = "loading" | "2d" | "3d";
@@ -54,14 +55,29 @@ export default function RendererStage({
   const [override, setOverride] = useState<Conditions | null>(null);
   const effective = override ?? conditions;
 
+  // Preload the terrain assets in parallel with the lazy three.js chunk — by
+  // the time the chunk evaluates, the heightmap fetch is already in flight.
+  useEffect(() => {
+    if (mode === "3d") void loadTerrain().catch(() => {});
+  }, [mode]);
+
   return (
     <ModeContext.Provider value={mode}>
       {/* The golden-hour gradient is the base layer and the 3D streaming placeholder. */}
       <SeaSky />
-      {mode !== "3d" && <Ocean conditions={effective} />}
+      {/* The renderer decision happens once, before either stage paints: the 2D
+          ocean mounts ONLY when 2D is the decision — never as a 3D pre-state. */}
+      {mode === "2d" && <Ocean conditions={effective} />}
       {/* z-0 wrapper (owned by CoastBackground) so the canvas receives pointer events;
           the chrome (nav z-15, header z-20, panel z-30) stays above it. */}
       {mode === "3d" && <CoastBackground conditions={effective} />}
+      {mode === "loading" && (
+        <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-[42%] z-0 flex justify-center">
+          <span className="font-mono text-[11px] uppercase tracking-[0.3em] text-[color:var(--ink)]/60">
+            establishing conditions...
+          </span>
+        </div>
+      )}
       {children}
       {mode !== "loading" && <Controls live={conditions} override={override} setOverride={setOverride} />}
     </ModeContext.Provider>

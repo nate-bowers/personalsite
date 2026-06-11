@@ -9,15 +9,15 @@
 :root { color-scheme: dark; }
 
 body {
-  --sky-zenith: #46406f; /* deep violet overhead */
-  --sky-low: #eaa86a;    /* warm orange horizon band */
-  --sun-glow: #ffd79c;
-  --water-far: #3a3357;  /* violet sea at distance */
-  --water-near: #244a63; /* deeper blue near camera */
-  --glitter: #ffbe78;    /* golden sun path on water */
+  --sky-zenith: #4a3d6b; /* deep violet overhead */
+  --sky-low: #e8895a;    /* warm orange horizon band */
+  --sun-glow: #ffd9a0;
+  --water-far: #2e2a4f;  /* violet sea at distance */
+  --water-near: #1e3a52; /* deeper blue near camera */
+  --glitter: #ffb870;    /* golden sun path on water */
   --land-lit: #c97b4a;   /* sunlit terrain faces */
   --land-shade: #3d3357; /* shadowed faces */
-  --fog: #e2ab7e;        /* warm atmospheric haze */
+  --fog: #d9a084;        /* warm atmospheric haze */
   --ink: #fbf3e4;        /* warm off-white text */
   --accent: #ff7847;     /* buoy orange */
 

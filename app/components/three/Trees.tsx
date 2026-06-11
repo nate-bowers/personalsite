@@ -3,10 +3,27 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { sampleElevation, type TerrainData } from "@/lib/terrain";
-import { POND_X, POND_Z } from "./Pond";
+import {
+  elevationAtScene,
+  lngLatToScene,
+  openWaterAtScene,
+  type TerrainData,
+} from "@/lib/terrain";
 
-// deterministic RNG so the forest is stable across renders
+/**
+ * Land cover, coastal greens only (FIX 3b): two species, one InstancedMesh
+ * each — two draw calls for the whole forest.
+ *
+ *  - Conifers: dense dark coverage on the Marin ridges and the Big Sur coast,
+ *    holding steep and high terrain elsewhere (where the albedo also goes
+ *    green), sparse singles in the grassland.
+ *  - Monterey cypress: scattered along the immediate coastline, windswept
+ *    silhouette.
+ *
+ * Placement is sampled from the real heightmap (elevation, slope, distance to
+ * water) with a seeded RNG so the forest is stable across renders.
+ */
+
 function mulberry32(seed: number) {
   let a = seed;
   return () => {
@@ -18,66 +35,116 @@ function mulberry32(seed: number) {
   };
 }
 
-// A tiered fir: a short trunk + three stacked cones, merged into one geometry so the
-// whole forest is a single instanced draw call.
-function makeTreeGeometry(): THREE.BufferGeometry {
-  const cone = (r: number, h: number, y: number) => {
-    const g = new THREE.ConeGeometry(r, h, 7);
-    g.translate(0, y, 0);
-    return g;
-  };
-  const trunk = new THREE.CylinderGeometry(0.02, 0.028, 0.12, 6);
-  trunk.translate(0, 0.06, 0);
-  return mergeGeometries([
-    trunk,
-    cone(0.13, 0.3, 0.18),
-    cone(0.1, 0.26, 0.34),
-    cone(0.07, 0.22, 0.48),
-  ]);
+// Tiered conifer (~40 tris): trunk + two stacked cones.
+function coniferGeometry(): THREE.BufferGeometry {
+  const trunk = new THREE.CylinderGeometry(0.012, 0.016, 0.07, 5);
+  trunk.translate(0, 0.035, 0);
+  const lower = new THREE.ConeGeometry(0.075, 0.2, 7);
+  lower.translate(0, 0.14, 0);
+  const upper = new THREE.ConeGeometry(0.05, 0.16, 7);
+  upper.translate(0, 0.27, 0);
+  return mergeGeometries([trunk, lower, upper]);
 }
 
-export default function Trees({ data }: { data: TerrainData }) {
-  const geometry = useMemo(() => makeTreeGeometry(), []);
-  const ref = useRef<THREE.InstancedMesh>(null);
+// Windswept Monterey cypress (~50 tris): leaning trunk + flattened canopy.
+function cypressGeometry(): THREE.BufferGeometry {
+  const trunk = new THREE.CylinderGeometry(0.012, 0.018, 0.12, 5);
+  trunk.translate(0, 0.06, 0);
+  trunk.rotateZ(0.18); // leaning away from the onshore wind
+  const canopy = new THREE.SphereGeometry(0.07, 7, 5);
+  canopy.scale(1.5, 0.55, 1.2);
+  canopy.translate(0.025, 0.15, 0);
+  return mergeGeometries([trunk, canopy]);
+}
 
-  const trees = useMemo(() => {
-    const rng = mulberry32(20260611);
-    const { meta } = data;
-    const halfW = meta.sceneWidth / 2 - 0.4;
-    const halfD = meta.sceneDepth / 2 - 0.4;
-    const out: { pos: [number, number, number]; scale: number; color: THREE.Color }[] = [];
-    const c = new THREE.Color();
-    let tries = 0;
-    while (out.length < 520 && tries < 60000) {
-      tries++;
-      const x = (rng() * 2 - 1) * halfW;
-      const z = (rng() * 2 - 1) * halfD;
-      const u = (x + meta.sceneWidth / 2) / meta.sceneWidth;
-      const v = (z + meta.sceneDepth / 2) / meta.sceneDepth;
-      const elev = sampleElevation(data, u * (meta.width - 1), v * (meta.height - 1));
-      if (elev < 14 || elev > 850) continue;
-      if (x < -1.0 && elev < 55) continue; // keep the Pacific shore clear of trees
-      // leave an open clearing around the pond
-      const pdx = x - POND_X;
-      const pdz = z - POND_Z;
-      if (pdx * pdx + pdz * pdz < 1.15 * 1.15) continue;
-      // sparse & scattered: thin out further inland so the land reads as open hills
-      // dotted with trees rather than a solid canopy
-      const inland = THREE.MathUtils.clamp((x + 1.5) / 6.0, 0, 1);
-      if (rng() < 0.2 + 0.45 * inland) continue;
-      const scale = 0.5 + rng() * 1.05;
-      const r = rng();
-      if (r < 0.7) {
-        c.setHSL(0.26 + rng() * 0.06, 0.5, 0.27 + rng() * 0.1); // greens
-      } else if (r < 0.88) {
-        c.setHSL(0.07 + rng() * 0.05, 0.65, 0.44 + rng() * 0.08); // autumn gold/orange
-      } else {
-        c.setHSL(0.02 + rng() * 0.03, 0.64, 0.42 + rng() * 0.06); // autumn red
-      }
-      out.push({ pos: [x, elev * meta.yScale, z], scale, color: c.clone() });
-    }
-    return out;
-  }, [data]);
+interface Instance {
+  pos: [number, number, number];
+  scale: number;
+  rotY: number;
+  color: THREE.Color;
+}
+
+function buildForest(data: TerrainData) {
+  const rng = mulberry32(20260611);
+  const { meta } = data;
+  const halfW = meta.sceneWidth / 2;
+  const halfD = meta.sceneDepth / 2;
+
+  // region boosts in real coordinates
+  const [, marinZ] = lngLatToScene(meta, -122.6, 37.82); // north of the gate
+  const [bigSurX, bigSurZ] = lngLatToScene(meta, -121.9, 36.6);
+
+  const conifers: Instance[] = [];
+  const cypress: Instance[] = [];
+  const c = new THREE.Color();
+
+  let tries = 0;
+  while (conifers.length < 2600 && tries < 220000) {
+    tries++;
+    const x = (rng() * 2 - 1) * halfW;
+    const z = (rng() * 2 - 1) * halfD;
+    const elev = elevationAtScene(data, x, z);
+    if (elev < 6 || elev > 1100) continue;
+
+    const e = 0.12;
+    const slope =
+      (Math.abs(elevationAtScene(data, x + e, z) - elevationAtScene(data, x - e, z)) +
+        Math.abs(elevationAtScene(data, x, z + e) - elevationAtScene(data, x, z - e))) /
+      (2 * e) /
+      900; // rough normalized gradient
+
+    const nearOcean = openWaterAtScene(data, x - 0.25, z) > 0.15 || openWaterAtScene(data, x, z + 0.25) > 0.15;
+    const marin = z < marinZ && !nearOcean;
+    const bigSur = z > bigSurZ && x > bigSurX - 2.5;
+
+    // base acceptance: forests hold steep + high ground
+    let p = 0.04; // sparse grassland singles
+    if (slope > 0.25 || elev > 320) p = 0.55;
+    if (marin) p *= 2.2;
+    if (bigSur) p *= 2.4;
+    if (nearOcean && elev < 40) p *= 0.25; // beaches stay open
+    if (rng() > p) continue;
+
+    c.setHSL(0.31 + rng() * 0.07, 0.32 + rng() * 0.18, 0.16 + rng() * 0.12);
+    conifers.push({
+      pos: [x, elev * meta.yScale, z],
+      scale: 0.55 + rng() * 0.8,
+      rotY: rng() * Math.PI * 2,
+      color: c.clone(),
+    });
+  }
+
+  tries = 0;
+  while (cypress.length < 240 && tries < 60000) {
+    tries++;
+    const x = (rng() * 2 - 1) * halfW;
+    const z = (rng() * 2 - 1) * halfD;
+    const elev = elevationAtScene(data, x, z);
+    if (elev < 4 || elev > 90) continue;
+    // immediate coastline: open water close by to the west or south
+    const coastal =
+      openWaterAtScene(data, x - 0.18, z) > 0.25 || openWaterAtScene(data, x, z + 0.18) > 0.25;
+    if (!coastal || rng() > 0.5) continue;
+    c.setHSL(0.34 + rng() * 0.04, 0.26 + rng() * 0.12, 0.14 + rng() * 0.08);
+    cypress.push({
+      pos: [x, elev * meta.yScale, z],
+      scale: 0.6 + rng() * 0.7,
+      rotY: rng() * Math.PI * 2,
+      color: c.clone(),
+    });
+  }
+
+  return { conifers, cypress };
+}
+
+function Species({
+  geometry,
+  instances,
+}: {
+  geometry: THREE.BufferGeometry;
+  instances: Instance[];
+}) {
+  const ref = useRef<THREE.InstancedMesh>(null);
 
   useLayoutEffect(() => {
     const mesh = ref.current;
@@ -86,8 +153,10 @@ export default function Trees({ data }: { data: TerrainData }) {
     const q = new THREE.Quaternion();
     const p = new THREE.Vector3();
     const s = new THREE.Vector3();
-    trees.forEach((t, i) => {
+    const axis = new THREE.Vector3(0, 1, 0);
+    instances.forEach((t, i) => {
       p.set(t.pos[0], t.pos[1], t.pos[2]);
+      q.setFromAxisAngle(axis, t.rotY);
       s.set(t.scale, t.scale, t.scale);
       m.compose(p, q, s);
       mesh.setMatrixAt(i, m);
@@ -95,11 +164,24 @@ export default function Trees({ data }: { data: TerrainData }) {
     });
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [trees]);
+  }, [instances]);
 
   return (
-    <instancedMesh ref={ref} args={[geometry, undefined, trees.length]} castShadow receiveShadow>
+    <instancedMesh ref={ref} args={[geometry, undefined, instances.length]}>
       <meshStandardMaterial color="#ffffff" roughness={1} metalness={0} />
     </instancedMesh>
+  );
+}
+
+export default function Trees({ data }: { data: TerrainData }) {
+  const coniferGeo = useMemo(() => coniferGeometry(), []);
+  const cypressGeo = useMemo(() => cypressGeometry(), []);
+  const { conifers, cypress } = useMemo(() => buildForest(data), [data]);
+
+  return (
+    <group>
+      <Species geometry={coniferGeo} instances={conifers} />
+      <Species geometry={cypressGeo} instances={cypress} />
+    </group>
   );
 }

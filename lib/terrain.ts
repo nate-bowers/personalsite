@@ -1,7 +1,7 @@
 /**
  * Client-side loader + helpers for the committed terrain assets in /public/terrain
- * (produced by scripts/build-terrain.mjs). The 2MB heightmap is fetched once and
- * cached; it sits behind the lazy 3D bundle so it never blocks first paint.
+ * (produced by scripts/build-terrain.mjs). The heightmap is int16-quantized metres
+ * (~1MB raw); it sits behind the lazy 3D bundle so it never blocks first paint.
  */
 
 export interface TerrainMeta {
@@ -16,6 +16,7 @@ export interface TerrainMeta {
   oceanClampM: number;
   elevMin: number;
   elevMax: number;
+  encoding: string;
   source: string;
 }
 
@@ -31,9 +32,17 @@ export interface Anchor {
   terrainY: number;
 }
 
+export interface Place {
+  name: string;
+  x: number;
+  z: number;
+  elevMeters: number;
+}
+
 export interface TerrainData {
   meta: TerrainMeta;
   anchors: Anchor[];
+  places: Place[];
   heights: Float32Array;
 }
 
@@ -42,12 +51,18 @@ let cache: Promise<TerrainData> | null = null;
 export function loadTerrain(): Promise<TerrainData> {
   if (!cache) {
     cache = (async () => {
-      const [meta, anchors, bin] = await Promise.all([
+      const [meta, anchorsFile, bin] = await Promise.all([
         fetch("/terrain/meta.json").then((r) => r.json()),
         fetch("/terrain/anchors.json").then((r) => r.json()),
         fetch("/terrain/heightmap.bin").then((r) => r.arrayBuffer()),
       ]);
-      return { meta, anchors, heights: new Float32Array(bin) } as TerrainData;
+      const heights = Float32Array.from(new Int16Array(bin));
+      return {
+        meta,
+        anchors: anchorsFile.anchors,
+        places: anchorsFile.places,
+        heights,
+      } as TerrainData;
     })();
   }
   return cache;
@@ -78,10 +93,26 @@ export function lngLatToScene(meta: TerrainMeta, lng: number, lat: number): [num
   return [x, z];
 }
 
-/** Scene (x,z) -> terrain surface height in scene units. */
-export function terrainYAtScene(d: TerrainData, x: number, z: number): number {
-  const { sceneWidth, sceneDepth, width, height, yScale } = d.meta;
+/** Elevation in metres at scene (x,z). */
+export function elevationAtScene(d: TerrainData, x: number, z: number): number {
+  const { sceneWidth, sceneDepth, width, height } = d.meta;
   const u = (x + sceneWidth / 2) / sceneWidth; // 0=west .. 1=east
   const v = (z + sceneDepth / 2) / sceneDepth; // 0=north .. 1=south
-  return sampleElevation(d, u * (width - 1), v * (height - 1)) * yScale;
+  return sampleElevation(d, u * (width - 1), v * (height - 1));
+}
+
+/** Scene (x,z) -> terrain surface height in scene units. */
+export function terrainYAtScene(d: TerrainData, x: number, z: number): number {
+  return elevationAtScene(d, x, z) * d.meta.yScale;
+}
+
+/**
+ * Open-water factor at scene (x,z): 1 in deep offshore water, fading to 0 in the
+ * shallows and the bay. Drives Gerstner amplitude so swell rolls on the Pacific
+ * and the bay stays calm — from real bathymetry, not a hand-drawn mask.
+ */
+export function openWaterAtScene(d: TerrainData, x: number, z: number): number {
+  const e = elevationAtScene(d, x, z);
+  const t = (-e - 4) / 56; // -4m -> 0, -60m -> 1
+  return Math.max(0, Math.min(1, t));
 }

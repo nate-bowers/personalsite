@@ -19,24 +19,24 @@ function Puff({ position, scale }: { position: [number, number, number]; scale: 
       {PUFF_OFFSETS.map((o, i) => (
         <mesh key={i} position={o}>
           <sphereGeometry args={[0.5, 10, 8]} />
-          <meshStandardMaterial color="#f6e6d6" roughness={1} metalness={0} transparent opacity={0.9} />
+          <meshStandardMaterial color="#f6e6d6" roughness={1} metalness={0} transparent opacity={0.55} />
         </mesh>
       ))}
     </group>
   );
 }
 
-// base position, scale, drift speed
+// base position, scale, drift speed — high and far so they read as a band of
+// sunset cloud near the horizon, never blocking the camera
 const CLOUDS: { p: [number, number, number]; s: number; v: number }[] = [
-  { p: [-8, 9.5, -10], s: 2.4, v: 0.05 },
-  { p: [6, 11, -14], s: 3.1, v: 0.07 },
-  { p: [14, 8.5, -7], s: 2.6, v: 0.04 },
-  { p: [-14, 10.5, -3], s: 2.1, v: 0.06 },
-  { p: [1, 9, 5], s: 1.9, v: 0.045 },
-  { p: [-2, 12, -18], s: 3.4, v: 0.08 },
+  { p: [-14, 16, -26], s: 2.2, v: 0.05 },
+  { p: [6, 18.5, -30], s: 2.8, v: 0.07 },
+  { p: [18, 15.5, -20], s: 2.3, v: 0.04 },
+  { p: [-22, 17, -12], s: 2.0, v: 0.06 },
+  { p: [-4, 19, -34], s: 3.0, v: 0.08 },
 ];
 
-const SPAN = 52;
+const SPAN = 64;
 
 /** Warm sunset cloud puffs that drift slowly across the sky. */
 export default function Clouds() {

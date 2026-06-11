@@ -42,3 +42,4 @@ next-env.d.ts
 
 # terrain tile cache (assets in public/terrain are committed)
 /.terrain-cache
+screenshots/*.png
