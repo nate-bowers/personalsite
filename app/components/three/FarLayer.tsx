@@ -191,7 +191,7 @@ function FarTrees({ data, far }: { data: TerrainData; far: FarData }) {
     const out: { pos: [number, number, number]; scale: number; color: THREE.Color }[] = [];
     const c = new THREE.Color();
     let tries = 0;
-    while (out.length < 700 && tries < 40000) {
+    while (out.length < 2300 && tries < 160000) {
       tries++;
       const x = fx0 + rng() * (fx1 - fx0);
       const z = fz0 + rng() * (fz1 - fz0);
@@ -200,12 +200,12 @@ function FarTrees({ data, far }: { data: TerrainData; far: FarData }) {
       // stay clear of the hazed outer collapse
       if (Math.min(x - fx0, fx1 - x, z - fz0, fz1 - z) < OUTER_COLLAPSE + 1) continue;
       const elev = farElevationAtScene(far, x, z);
-      if (elev < 220 || elev > 1350) continue;
+      if (elev < 110 || elev > 1350) continue;
       if (rng() < 0.45) continue;
       c.setHSL(0.33 + rng() * 0.05, 0.22 + rng() * 0.12, 0.14 + rng() * 0.08);
       out.push({
         pos: [x, elev * meta.yScale, z],
-        scale: 1.0 + rng() * 1.1,
+        scale: 0.8 + rng() * 0.9,
         color: c.clone(),
       });
     }

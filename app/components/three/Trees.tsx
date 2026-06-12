@@ -94,7 +94,7 @@ function buildForest(data: TerrainData) {
   const c = new THREE.Color();
 
   let tries = 0;
-  while (conifers.length < 2600 && tries < 220000) {
+  while (conifers.length < 1500 && tries < 220000) {
     tries++;
     const x = (rng() * 2 - 1) * halfW;
     const z = (rng() * 2 - 1) * halfD;
@@ -113,11 +113,12 @@ function buildForest(data: TerrainData) {
     const marin = z < marinZ && !nearOcean;
     const bigSur = z > bigSurZ && x > bigSurX - 2.5;
 
-    // base acceptance: forests hold steep + high ground
-    let p = 0.04; // sparse grassland singles
-    if (slope > 0.25 || elev > 320) p = 0.55;
-    if (marin) p *= 2.2;
-    if (bigSur) p *= 2.4;
+    // base acceptance: forests hold steep + high ground (medium density,
+    // matched to the far tier so the data boundary is invisible)
+    let p = 0.03; // sparse grassland singles
+    if (slope > 0.25 || elev > 320) p = 0.36;
+    if (marin) p *= 1.8;
+    if (bigSur) p *= 2.0;
     if (nearOcean && elev < 40) p *= 0.25; // beaches stay open
     if (rng() > p) continue;
 
