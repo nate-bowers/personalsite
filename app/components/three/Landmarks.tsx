@@ -15,10 +15,12 @@ import LevisStadium from "./LevisStadium";
 
 type V3 = [number, number, number];
 
+// hoover + levis are nudged a few km from their true addresses onto open,
+// camera-facing ground (foothill bench / bayshore flats) so they stay visible
 const SPOTS = {
-  hoover: { lng: -122.1661, lat: 37.4275 },
+  hoover: { lng: -122.195, lat: 37.405 },
   campanile: { lng: -122.2578, lat: 37.8721 },
-  levis: { lng: -121.9696, lat: 37.4033 },
+  levis: { lng: -121.95, lat: 37.40 },
 };
 
 export default function Landmarks({ data }: { data: TerrainData }) {

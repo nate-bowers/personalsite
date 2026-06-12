@@ -120,7 +120,7 @@ export default function HooverTower({ pos }: { pos: V3 }) {
   }, []);
 
   return (
-    <group position={pos} scale={0.45}>
+    <group position={pos} scale={0.62}>
       <mesh geometry={buff}>
         <meshStandardMaterial color="#ddc99c" roughness={0.85} emissive="#ddc99c" emissiveIntensity={0.3} />
       </mesh>

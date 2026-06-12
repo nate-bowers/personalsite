@@ -133,7 +133,7 @@ export default function Campanile({ pos }: { pos: V3 }) {
   }, []);
 
   return (
-    <group position={pos} scale={0.45}>
+    <group position={pos} scale={[0.68, 0.56, 0.68]}>
       <mesh geometry={stone}>
         <meshStandardMaterial
           color="#ebe6da"
