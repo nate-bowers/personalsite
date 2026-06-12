@@ -11,6 +11,7 @@ import { lazy, Suspense } from "react";
 import Terrain from "./Terrain";
 import Trees from "./Trees";
 import GoldenGate from "./GoldenGate";
+import Landmarks from "./Landmarks";
 import PlaceNames from "./PlaceNames";
 import Water from "./Water";
 import SkyDome from "./SkyDome";
@@ -18,6 +19,7 @@ import Clouds from "./Clouds";
 import Birds from "./Birds";
 import Ferry from "./Ferry";
 import Buoys from "./Buoys";
+import Ambient from "./Ambient";
 import CameraRig from "./CameraRig";
 
 // Replace three's fog with the shared height fog before any material compiles.
@@ -91,10 +93,12 @@ export default function CoastScene({
       )}
       <Trees data={data} />
       <GoldenGate data={data} />
+      <Landmarks data={data} />
       <PlaceNames data={data} />
       <Ferry data={data} conditions={conditions} openness={openness} />
       <Water conditions={conditions} sunDir={SUN_DIR} openness={openness} />
       <Buoys terrain={data} conditions={conditions} openness={openness} />
+      <Ambient conditions={conditions} openness={openness} />
       <CameraRig anchors={data.anchors} />
       <ReadySignal onReady={onReady} />
       <EffectComposer>

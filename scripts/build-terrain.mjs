@@ -206,6 +206,39 @@ function raiseInlandDepressions(grid, w, h) {
   return raised;
 }
 
+/**
+ * The water stops after the bay. Suisun Bay and the Delta are hydrologically
+ * connected through Carquinez (so the flood-fill keeps them), but the scene
+ * wants dry valley east of the bay — farmland, not inland sea. Raise every
+ * below-sea cell east of Carquinez in the bay's latitudes, blended over a
+ * ~5 km band so the strait reads as a river narrowing into land.
+ */
+function cutDeltaWater(grid, w, h, bbox) {
+  const CUT_LNG = -122.16; // just east of the Carquinez bend
+  const BAND = 0.06; // degrees of blend
+  const MIN_LAT = 37.82; // protect the South Bay (its water sits below this)
+  let cut = 0;
+  for (let y = 0; y < h; y++) {
+    const lat = bbox.latMax - (y / (h - 1)) * (bbox.latMax - bbox.latMin);
+    if (lat <= MIN_LAT) continue;
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (grid[i] >= 3) continue;
+      const lng = bbox.lngMin + (x / (w - 1)) * (bbox.lngMax - bbox.lngMin);
+      if (lng <= CUT_LNG - BAND) continue;
+      const t = Math.min(1, (lng - (CUT_LNG - BAND)) / BAND);
+      const tt = t * t * (3 - 2 * t);
+      const target = 6;
+      const next = grid[i] * (1 - tt) + target * tt;
+      if (next > grid[i]) {
+        grid[i] = next;
+        cut++;
+      }
+    }
+  }
+  return cut;
+}
+
 // Separable box blur — turns single-pixel data spikes into readable ridgelines.
 function boxBlur(src, w, h, radius) {
   const tmp = new Float32Array(src.length);
@@ -337,6 +370,7 @@ async function main() {
   }
   console.log(`Heightmap ${OUT_W}x${OUT_H}: ${min.toFixed(0)}m..${max.toFixed(0)}m`);
   console.log(`  raised ${raiseInlandDepressions(out, OUT_W, OUT_H)} inland below-sea cells (core)`);
+  console.log(`  cut ${cutDeltaWater(out, OUT_W, OUT_H, BBOX)} delta-water cells east of Carquinez (core)`);
 
   // lat/lng -> scene coordinates (mild N-S compression).
   const sceneX = (lng) => ((lng - BBOX.lngMin) / (BBOX.lngMax - BBOX.lngMin)) * SCENE_WIDTH - SCENE_WIDTH / 2;
@@ -392,6 +426,7 @@ async function main() {
   }
   far = boxBlur(far, FAR_W, FAR_H, 1);
   console.log(`  raised ${raiseInlandDepressions(far, FAR_W, FAR_H)} inland below-sea cells (far)`);
+  console.log(`  cut ${cutDeltaWater(far, FAR_W, FAR_H, FAR_BBOX)} delta-water cells east of Carquinez (far)`);
   const farQuant = new Int16Array(far.length);
   for (let i = 0; i < far.length; i++) farQuant[i] = Math.round(far[i]);
 

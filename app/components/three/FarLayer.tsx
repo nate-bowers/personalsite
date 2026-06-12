@@ -238,6 +238,89 @@ function FarTrees({ data, far }: { data: TerrainData; far: FarData }) {
   );
 }
 
+
+// Central Valley farmland: a quilt of flat field quads on the valley floor —
+// one InstancedMesh. Their warm crop/fallow tones are what makes the flat,
+// fog-washed plain east of the bay read as LAND instead of distant water.
+const FIELD_COLORS = ["#c8ab47", "#5f8a3e", "#96713f", "#a8b052", "#d3b65e", "#4e7c3a"];
+
+function FarmFields({ data, far }: { data: TerrainData; far: FarData }) {
+  const geometry = useMemo(() => {
+    const g = new THREE.PlaneGeometry(1, 1);
+    g.rotateX(-Math.PI / 2);
+    return g;
+  }, []);
+
+  const fields = useMemo(() => {
+    const { meta } = data;
+    const halfW = meta.sceneWidth / 2;
+    const halfD = meta.sceneDepth / 2;
+    const coreElev = (x: number, z: number) => {
+      const u = (x + halfW) / meta.sceneWidth;
+      const v = (z + halfD) / meta.sceneDepth;
+      return sampleElevation(data, u * (meta.width - 1), v * (meta.height - 1));
+    };
+    const ground = (x: number, z: number) =>
+      Math.abs(x) <= halfW && Math.abs(z) <= halfD ? coreElev(x, z) : farElevationAtScene(far, x, z);
+
+    const rng = mulberry32(95202);
+    const out: { pos: [number, number, number]; sx: number; sz: number; rotY: number; color: THREE.Color }[] = [];
+    const c = new THREE.Color();
+    // jittered grid over the valley: dried Suisun/Delta flats through the
+    // San Joaquin, east of the Diablo ridge, fading before the foothills
+    for (let gx = 6.4; gx < 24; gx += 0.62) {
+      for (let gz = -8.5; gz < 9; gz += 0.46) {
+        const x = gx + (rng() - 0.5) * 0.3;
+        const z = gz + (rng() - 0.5) * 0.24;
+        const e = ground(x, z);
+        if (e < 3.5 || e > 90) continue; // valley floor only
+        // flat ground only — no fields climbing the hillsides
+        const slope =
+          Math.abs(ground(x + 0.3, z) - e) + Math.abs(ground(x, z + 0.3) - e);
+        if (slope > 14) continue;
+        if (rng() < 0.18) continue; // gaps in the quilt
+        c.set(FIELD_COLORS[Math.floor(rng() * FIELD_COLORS.length)]);
+        c.offsetHSL(0, (rng() - 0.5) * 0.06, (rng() - 0.5) * 0.05);
+        out.push({
+          pos: [x, e * meta.yScale + 0.006, z],
+          sx: 0.5 + rng() * 0.34,
+          sz: 0.36 + rng() * 0.26,
+          rotY: -0.32 + (rng() - 0.5) * 0.16, // loosely aligned to the valley axis
+          color: c.clone(),
+        });
+      }
+    }
+    return out;
+  }, [data, far]);
+
+  const ref = useRef<THREE.InstancedMesh>(null);
+  useLayoutEffect(() => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const p = new THREE.Vector3();
+    const s = new THREE.Vector3();
+    const axis = new THREE.Vector3(0, 1, 0);
+    fields.forEach((t, i) => {
+      p.set(t.pos[0], t.pos[1], t.pos[2]);
+      q.setFromAxisAngle(axis, t.rotY);
+      s.set(t.sx, 1, t.sz);
+      m.compose(p, q, s);
+      mesh.setMatrixAt(i, m);
+      mesh.setColorAt(i, t.color);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }, [fields]);
+
+  return (
+    <instancedMesh ref={ref} args={[geometry, undefined, fields.length]}>
+      <meshStandardMaterial color="#ffffff" roughness={1} metalness={0} />
+    </instancedMesh>
+  );
+}
+
 // Highway 101, SF to Paso Robles — real waypoints, draped on whichever tier
 // owns the ground beneath it.
 const US101: [number, number][] = [
@@ -344,6 +427,7 @@ export default function FarLayer({
     <group>
       <FarTerrain data={data} far={far} sunDir={sunDir} />
       <FarTrees data={data} far={far} />
+      <FarmFields data={data} far={far} />
       <Highway data={data} far={far} />
     </group>
   );

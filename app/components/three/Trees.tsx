@@ -10,6 +10,14 @@ import {
   type TerrainData,
 } from "@/lib/terrain";
 
+// keep clearings around the landmarks so they read instantly
+const CLEARINGS: [number, number][] = [
+  [-122.1661, 37.4275], // Hoover Tower
+  [-122.2578, 37.8721], // Campanile
+  [-121.9696, 37.4033], // Levi's Stadium
+  [-122.4783, 37.8199], // Golden Gate approaches
+];
+
 /**
  * Land cover, coastal greens only (FIX 3b): two species, one InstancedMesh
  * each — two draw calls for the whole forest.
@@ -74,6 +82,10 @@ function buildForest(data: TerrainData) {
   const [, marinZ] = lngLatToScene(meta, -122.6, 37.82); // north of the gate
   const [bigSurX, bigSurZ] = lngLatToScene(meta, -121.9, 36.6);
 
+  const clearings = CLEARINGS.map(([lng, lat]) => lngLatToScene(meta, lng, lat));
+  const inClearing = (x: number, z: number) =>
+    clearings.some(([cx, cz]) => (x - cx) * (x - cx) + (z - cz) * (z - cz) < 0.55 * 0.55);
+
   const conifers: Instance[] = [];
   const cypress: Instance[] = [];
   const c = new THREE.Color();
@@ -85,6 +97,7 @@ function buildForest(data: TerrainData) {
     const z = (rng() * 2 - 1) * halfD;
     const elev = elevationAtScene(data, x, z);
     if (elev < 6 || elev > 1100) continue;
+    if (inClearing(x, z)) continue;
 
     const e = 0.12;
     const slope =

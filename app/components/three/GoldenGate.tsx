@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { lngLatToScene, type TerrainData } from "@/lib/terrain";
 
 /**
@@ -30,29 +31,28 @@ function Cable({ a, b, sag }: { a: V3; b: V3; sag: number }) {
 }
 
 function Suspenders({ a, b, sag, deckY, x }: { a: V3; b: V3; sag: number; deckY: number; x: number }) {
-  const rods = useMemo(() => {
+  const geo = useMemo(() => {
     const va = new THREE.Vector3(...a);
     const vb = new THREE.Vector3(...b);
     const mid = va.clone().add(vb).multiplyScalar(0.5);
     mid.y -= sag;
     const curve = new THREE.QuadraticBezierCurve3(va, mid, vb);
-    const out: { y: number; z: number; h: number }[] = [];
+    const parts: THREE.BufferGeometry[] = [];
     for (let i = 1; i < 12; i++) {
       const p = curve.getPoint(i / 12);
       const h = p.y - deckY;
-      if (h > 0.04) out.push({ y: deckY + h / 2, z: p.z, h });
+      if (h > 0.04) {
+        const rod = new THREE.CylinderGeometry(0.004, 0.004, h, 4);
+        rod.translate(x, deckY + h / 2, p.z);
+        parts.push(rod);
+      }
     }
-    return out;
-  }, [a, b, sag, deckY]);
+    return mergeGeometries(parts);
+  }, [a, b, sag, deckY, x]);
   return (
-    <>
-      {rods.map((r, i) => (
-        <mesh key={i} position={[x, r.y, r.z]}>
-          <cylinderGeometry args={[0.004, 0.004, r.h, 4]} />
-          <meshStandardMaterial color="#e35e30" roughness={0.6} />
-        </mesh>
-      ))}
-    </>
+    <mesh geometry={geo}>
+      <meshStandardMaterial color="#e35e30" roughness={0.6} />
+    </mesh>
   );
 }
 
