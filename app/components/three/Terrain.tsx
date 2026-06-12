@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { sampleElevation, type TerrainData } from "@/lib/terrain";
-import { TOKENS, HEIGHT_FOG_GLSL } from "./atmosphere";
+import { TOKENS, HEIGHT_FOG_GLSL, FOG } from "./atmosphere";
 
 /**
  * The coastline terrain. One mesh, one draw call: a grid whose vertex density
@@ -27,9 +27,10 @@ const EDGE_Z = 62;
 // elevation (m) -> base albedo
 const RAMP: [number, THREE.Color][] = [
   [-160, new THREE.Color("#1c3148")], // seafloor (only visible through troughs)
-  [-4, new THREE.Color("#2e4a5c")],
-  [1, new THREE.Color("#decdA0")], // sand strip at the waterline
-  [14, new THREE.Color("#d3bc82")],
+  [-4, new THREE.Color("#3a5668")],
+  [1, new THREE.Color("#eedcab")], // sand strip at the waterline — bright, wide
+  [16, new THREE.Color("#e8d49c")],
+  [30, new THREE.Color("#d8c184")],
   [60, new THREE.Color("#c2a45e")], // golden grass, low rolling hills
   [260, new THREE.Color("#a3914f")], // drier gold higher up
   [520, new THREE.Color("#6f7d44")], // grass -> brush transition
@@ -120,6 +121,13 @@ export const terrainFragmentShader = /* glsl */ `
 
     float dist = length(cameraPosition - vWorldPos);
     col = applyHeightFog(col, dist, vWorldPos.y);
+
+    // the same after-fog atmospheric sun halo the sky dome and sea carry —
+    // fog-dominated land must glow identically or its silhouette draws a line
+    float dfGlow = smoothstep(${FOG.FAR0.toFixed(1)}, ${FOG.FAR1.toFixed(1)}, dist);
+    vec3 Datm = normalize(vWorldPos - cameraPosition);
+    col += uSunGlow * pow(max(dot(Datm, S), 0.0), 18.0) * 0.7 * dfGlow;
+
     gl_FragColor = vec4(col, 1.0);
   }
 `;

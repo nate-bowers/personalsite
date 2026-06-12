@@ -7,7 +7,7 @@ import type { Conditions } from "@/lib/ndbc";
 import { oceanParams } from "@/lib/ocean-map";
 import { gerstnerGlsl, DISP_FADE } from "@/lib/gerstner";
 import type { OpennessField } from "@/lib/openness";
-import { TOKENS, HEIGHT_FOG_GLSL } from "./atmosphere";
+import { TOKENS, HEIGHT_FOG_GLSL, FOG } from "./atmosphere";
 
 /**
  * Gerstner-displaced water plane. Amplitude / speed / chop come from the live
@@ -65,6 +65,7 @@ const fragmentShader = /* glsl */ `
   uniform float uTime;
   uniform vec3 uSkyHigh;
   uniform vec3 uSkyLow;
+  uniform vec3 uSunGlowC;
   varying vec3 vWorldPos;
   varying vec3 vNormal;
   varying float vOpen;
@@ -109,6 +110,13 @@ const fragmentShader = /* glsl */ `
 
     color = applyHeightFog(color, dist, vWorldPos.y);
 
+    // atmospheric sun-glow over the fogged far sea — the same after-fog halo
+    // the FarWater ring and the sky dome carry, scaled by fog amount so the
+    // three surfaces stay continuous and the near sea is untouched
+    float dfGlow = smoothstep(${FOG.FAR0.toFixed(1)}, ${FOG.FAR1.toFixed(1)}, dist);
+    vec3 Datm = normalize(vWorldPos - cameraPosition);
+    color += uSunGlowC * pow(max(dot(Datm, S), 0.0), 18.0) * 0.7 * dfGlow;
+
     gl_FragColor = vec4(color, 1.0);
   }
 `;
@@ -124,19 +132,32 @@ const farVertexShader = /* glsl */ `
 
 const farFragmentShader = /* glsl */ `
   uniform vec3 uFar;
+  uniform vec3 uSunDirF;
+  uniform vec3 uGlitterF;
   varying vec3 vWorldPos;
   ${HEIGHT_FOG_GLSL}
   void main() {
     float dist = length(cameraPosition - vWorldPos);
-    gl_FragColor = vec4(applyHeightFog(uFar, dist, 0.0), 1.0);
+    vec3 col = applyHeightFog(uFar, dist, 0.0);
+    // warm sheen on the far sea under the low sun — the EXACT halo formula the
+    // sky dome uses, so the tone is continuous across the sea/sky boundary
+    vec3 D = normalize(vWorldPos - cameraPosition);
+    float g = pow(max(dot(D, normalize(uSunDirF)), 0.0), 18.0);
+    col += uGlitterF * g * 0.7;
+    gl_FragColor = vec4(col, 1.0);
   }
 `;
 
 /** Flat fog-toned sea carrying the waterline out past the sky dome wall, so
  * the Gerstner plane's corners never show against the sky. */
-function FarWater() {
+function FarWater({ sunDir }: { sunDir: [number, number, number] }) {
   const uniforms = useMemo(
-    () => ({ uFar: { value: new THREE.Color(TOKENS.waterFar) } }),
+    () => ({
+      uFar: { value: new THREE.Color(TOKENS.waterFar) },
+      uSunDirF: { value: new THREE.Vector3(...sunDir) },
+      uGlitterF: { value: new THREE.Color(TOKENS.sunGlow) },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
   return (
@@ -187,6 +208,7 @@ export default function Water({
       uSunDir: { value: new THREE.Vector3(...sunDir) },
       uSkyHigh: { value: new THREE.Color(TOKENS.skyZenith) },
       uSkyLow: { value: new THREE.Color(TOKENS.skyLow) },
+      uSunGlowC: { value: new THREE.Color(TOKENS.sunGlow) },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -213,7 +235,7 @@ export default function Water({
           fragmentShader={fragmentShader}
         />
       </mesh>
-      <FarWater />
+      <FarWater sunDir={sunDir} />
     </group>
   );
 }

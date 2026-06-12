@@ -28,9 +28,11 @@ const fragmentShader = /* glsl */ `
   varying vec3 vDir;
   void main() {
     vec3 D = normalize(vDir);
-    // orange holds the horizon band; violet takes over with altitude
-    float t = clamp(D.y, 0.0, 1.0);
-    vec3 col = mix(uLow, uZenith, pow(t, 0.45));
+    // orange holds the horizon band; violet takes over with altitude.
+    // smoothstep onset: zero slope at the horizon, so the gradient never
+    // draws a visible crease line at the dome equator
+    float t = smoothstep(0.0, 0.5, clamp(D.y, 0.0, 1.0));
+    vec3 col = mix(uLow, uZenith, t);
 
     float s = max(dot(D, normalize(uSunDir)), 0.0);
     col += uSunGlow * pow(s, 18.0) * 0.7;            // wide warm halo

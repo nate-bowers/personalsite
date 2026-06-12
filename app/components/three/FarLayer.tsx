@@ -268,8 +268,8 @@ function FarmFields({ data, far }: { data: TerrainData; far: FarData }) {
     const c = new THREE.Color();
     // jittered grid over the valley: dried Suisun/Delta flats through the
     // San Joaquin, east of the Diablo ridge, fading before the foothills
-    for (let gx = 6.4; gx < 24; gx += 0.62) {
-      for (let gz = -8.5; gz < 9; gz += 0.46) {
+    for (let gx = 6.4; gx < 27; gx += 0.62) {
+      for (let gz = -19; gz < 9; gz += 0.46) {
         const x = gx + (rng() - 0.5) * 0.3;
         const z = gz + (rng() - 0.5) * 0.24;
         const e = ground(x, z);

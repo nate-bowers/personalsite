@@ -15,7 +15,7 @@ import { waterSurface, dispFade } from "@/lib/gerstner";
  */
 
 // ---------------------------------------------------------------- the plane
-const PLANE_Y = 10;
+const PLANE_Y = 8.55;
 const PLANE_SPEED = 0.55; // units/s — reads as a distant cruising jet
 const PLANE_SPAN = 95; // crossing length before it loops
 const TRAIL_LEN = 7;
@@ -32,8 +32,8 @@ function Jet() {
     for (let i = 0; i <= N; i++) {
       const t = i / N;
       const x = -0.3 - t * TRAIL_LEN; // behind the nose
-      const w = 0.015 + t * 0.075; // widens as it disperses
-      const a = (1 - t) * 0.42; // fades out
+      const w = 0.02 + t * 0.11; // widens as it disperses
+      const a = (1 - t) * 0.85; // fades out
       for (let s = 0; s < 2; s++) {
         const vi = (i * 2 + s) * 3;
         verts[vi] = x;
@@ -64,19 +64,19 @@ function Jet() {
     const t = state.clock.elapsedTime;
     // phased so a crossing is underway on first load; wraps far off-frame
     const d = (t * PLANE_SPEED + 35) % PLANE_SPAN;
-    g.position.set(-50 + d, PLANE_Y, -20 + d * 0.12);
-    g.rotation.y = -Math.atan2(0.12, 1);
+    g.position.set(-50 + d, PLANE_Y, -15 + d * 0.1);
+    g.rotation.y = -Math.atan2(0.1, 1);
   });
 
   return (
-    <group ref={group}>
+    <group ref={group} scale={2.2}>
       <mesh rotation={[0, 0, Math.PI / 2]}>
         <capsuleGeometry args={[0.022, 0.16, 3, 6]} />
-        <meshStandardMaterial color="#efeae0" roughness={0.5} />
+        <meshStandardMaterial color="#efeae0" roughness={0.5} emissive="#efeae0" emissiveIntensity={0.5} />
       </mesh>
       <mesh>
         <boxGeometry args={[0.05, 0.008, 0.22]} />
-        <meshStandardMaterial color="#e6e0d4" roughness={0.6} />
+        <meshStandardMaterial color="#e6e0d4" roughness={0.6} emissive="#e6e0d4" emissiveIntensity={0.5} />
       </mesh>
       <mesh geometry={trailGeo}>
         <meshBasicMaterial vertexColors transparent depthWrite={false} side={THREE.DoubleSide} />
@@ -100,11 +100,11 @@ function SharkFin({
   const finGeo = useMemo(() => {
     const shape = new THREE.Shape();
     shape.moveTo(0, 0);
-    shape.lineTo(0.085, 0);
-    shape.quadraticCurveTo(0.07, 0.05, 0.025, 0.085); // swept trailing edge
-    shape.quadraticCurveTo(0.005, 0.05, 0, 0);
-    const g = new THREE.ExtrudeGeometry(shape, { depth: 0.012, bevelEnabled: false });
-    g.translate(-0.04, 0, -0.006);
+    shape.lineTo(0.14, 0);
+    shape.quadraticCurveTo(0.115, 0.082, 0.04, 0.14); // swept trailing edge
+    shape.quadraticCurveTo(0.008, 0.082, 0, 0);
+    const g = new THREE.ExtrudeGeometry(shape, { depth: 0.02, bevelEnabled: false });
+    g.translate(-0.065, 0, -0.01);
     return g;
   }, []);
 
@@ -112,11 +112,11 @@ function SharkFin({
     const g = group.current;
     if (!g) return;
     const t = state.clock.elapsedTime;
-    // slow lissajous cruise in the visible open Pacific ahead of the camera
-    const cx = -4.4 + Math.sin(t * 0.021) * 1.8;
-    const cz = 1.0 + Math.sin(t * 0.034 + 1.2) * 2.2;
-    const vx = Math.cos(t * 0.021) * 1.8 * 0.021;
-    const vz = Math.cos(t * 0.034 + 1.2) * 2.2 * 0.034;
+    // slow lissajous cruise hugging the coast (just off the surf line)
+    const cx = -3.3 + Math.sin(t * 0.021) * 1.0;
+    const cz = 1.0 + Math.sin(t * 0.034 + 1.2) * 2.0;
+    const vx = Math.cos(t * 0.021) * 1.0 * 0.021;
+    const vz = Math.cos(t * 0.034 + 1.2) * 2.0 * 0.034;
     const cam = state.camera.position;
     const fade = dispFade(Math.hypot(cam.x - cx, cam.z - cz));
     const s = waterSurface(cx, cz, t, params, openness.sample(cx, cz) * fade);

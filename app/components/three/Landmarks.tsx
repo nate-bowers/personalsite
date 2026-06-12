@@ -20,7 +20,7 @@ type V3 = [number, number, number];
 const SPOTS = {
   hoover: { lng: -122.195, lat: 37.405 },
   campanile: { lng: -122.2578, lat: 37.8721 },
-  levis: { lng: -121.95, lat: 37.40 },
+  levis: { lng: -121.9, lat: 37.395 },
 };
 
 export default function Landmarks({ data }: { data: TerrainData }) {

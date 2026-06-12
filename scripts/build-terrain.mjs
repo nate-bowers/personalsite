@@ -31,9 +31,9 @@ const OUT_H = 896; // grid rows (N-S) — taller than wide; the coast runs N-S
 // fog wall instead of collapsing to a synthetic plain. Much coarser: z8 tiles
 // (~611m/px) into a small int16 grid.
 const FAR_Z = 8;
-const FAR_BBOX = { lngMin: -124.5, lngMax: -118.8, latMin: 34.6, latMax: 40.0 };
-const FAR_W = 512;
-const FAR_H = 544;
+const FAR_BBOX = { lngMin: -124.8, lngMax: -117.4, latMin: 33.6, latMax: 41.0 };
+const FAR_W = 576;
+const FAR_H = 640;
 const FAR_CLAMP_MAX = 3000; // high Sierra pokes through the haze (snowcapped)
 
 // Bodega Bay (38.3°N, north of Marin so the frame-top is real coast, not a

@@ -14,7 +14,7 @@ import {
 const CLEARINGS: [number, number, number][] = [
   [-122.195, 37.405, 0.7], // Hoover Tower
   [-122.2578, 37.8721, 0.6], // Campanile
-  [-121.95, 37.40, 1.35], // Levi's Stadium (rectangular footprint)
+  [-121.9, 37.395, 1.35], // Levi's Stadium (rectangular footprint)
   [-122.4783, 37.8199, 0.9], // Golden Gate approaches (full span)
 ];
 

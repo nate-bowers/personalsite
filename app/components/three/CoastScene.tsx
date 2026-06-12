@@ -30,7 +30,7 @@ installHeightFog();
 // the sun disc, glitter path and bloom are actually reachable from the rails.
 // Compass-bent north-of-west by artistic license — the same compression
 // license as the geography. Locked golden hour.
-const SUN_DIR: [number, number, number] = [0.37, 0.02, -0.93];
+const SUN_DIR: [number, number, number] = [0.37, 0.05, -0.93];
 
 /** Calls onReady after the first real frames have been presented. */
 function ReadySignal({ onReady }: { onReady: () => void }) {
