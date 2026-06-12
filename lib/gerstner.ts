@@ -4,7 +4,7 @@
  * evaluates the identical maths — so the buoys, the ferry, and the rendered
  * surface all ride exactly the same sea. There is no second copy to drift.
  *
- * Swell arrives from the WNW (open Pacific) and rolls toward the coast; the
+ * Swell arrives from the SW (open Pacific) and rolls NE toward the coast; the
  * `open` factor (0 sheltered/shallow, 1 open deep water) scales amplitude so
  * the bay stays calm and waves die at the shoreline. It comes from real
  * bathymetry + ray-cast shelter, not a hand mask (lib/openness.ts).
@@ -31,11 +31,13 @@ const norm = (d: [number, number]): [number, number] => {
   return [d[0] / m, d[1] / m];
 };
 
-// WNW swell heading ESE into the coastline (world +x east, +z south).
+// SW swell heading NE into the coastline (world +x east, +z south; plane-local
+// dir = (dx, -dz)) — from the NE-looking home camera the wave fronts travel
+// screen bottom-left -> top-right.
 export const WAVES: Wave[] = [
-  { dir: norm([0.9, -0.42]), L: 9.0, A: 0.1, Q: 0.6, sp: 1.3 },
-  { dir: norm([0.98, -0.12]), L: 4.6, A: 0.055, Q: 0.7, sp: 1.7 },
-  { dir: norm([0.55, -0.82]), L: 2.4, A: 0.028, Q: 0.8, sp: 2.2, chop: true },
+  { dir: norm([0.93, 0.36]), L: 9.0, A: 0.1, Q: 0.6, sp: 1.3 },
+  { dir: norm([0.99, 0.14]), L: 4.6, A: 0.055, Q: 0.7, sp: 1.7 },
+  { dir: norm([0.62, 0.78]), L: 2.4, A: 0.028, Q: 0.8, sp: 2.2, chop: true },
 ];
 
 const f = (n: number) => n.toFixed(5);

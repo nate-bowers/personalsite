@@ -4,9 +4,10 @@ import { useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import type { Conditions } from "@/lib/ndbc";
-import type { TerrainData } from "@/lib/terrain";
+import type { TerrainData, FarData } from "@/lib/terrain";
 import { computeOpenness } from "@/lib/openness";
 import { installHeightFog, TOKENS, FOG } from "./atmosphere";
+import { lazy, Suspense } from "react";
 import Terrain from "./Terrain";
 import Trees from "./Trees";
 import GoldenGate from "./GoldenGate";
@@ -44,13 +45,17 @@ function ReadySignal({ onReady }: { onReady: () => void }) {
   return null;
 }
 
+const FarLayer = lazy(() => import("./FarLayer"));
+
 export default function CoastScene({
   data,
+  far,
   conditions,
   eventSource,
   onReady,
 }: {
   data: TerrainData;
+  far: FarData | null;
   conditions: Conditions;
   eventSource?: RefObject<HTMLElement | null>;
   onReady: () => void;
@@ -79,6 +84,11 @@ export default function CoastScene({
       <Clouds />
       <Birds />
       <Terrain data={data} sunDir={SUN_DIR} />
+      {far && (
+        <Suspense fallback={null}>
+          <FarLayer data={data} far={far} sunDir={SUN_DIR} />
+        </Suspense>
+      )}
       <Trees data={data} />
       <GoldenGate data={data} />
       <PlaceNames data={data} />

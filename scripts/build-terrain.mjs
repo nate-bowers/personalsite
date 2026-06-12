@@ -26,6 +26,16 @@ const Z = 10; // ~122m/px at 37°N — matches the output grid resolution
 const OUT_W = 640; // grid columns (E-W)
 const OUT_H = 896; // grid rows (N-S) — taller than wide; the coast runs N-S
 
+// Secondary "far" tier: the rest of California around the core bbox, loaded
+// lazily after the scene is up so the topography continues naturally to the
+// fog wall instead of collapsing to a synthetic plain. Much coarser: z8 tiles
+// (~611m/px) into a small int16 grid.
+const FAR_Z = 8;
+const FAR_BBOX = { lngMin: -124.5, lngMax: -118.8, latMin: 34.6, latMax: 40.0 };
+const FAR_W = 512;
+const FAR_H = 544;
+const FAR_CLAMP_MAX = 3000; // high Sierra pokes through the haze (snowcapped)
+
 // Bodega Bay (38.3°N, north of Marin so the frame-top is real coast, not a
 // skirt extrusion) down to Big Sur (36.2°N), Pacific to the East Bay hills.
 // Covers Mt Tam, the Golden Gate + SF Bay, the peninsula, Monterey Bay's
@@ -80,13 +90,14 @@ async function exists(p) {
   }
 }
 
-async function getTile(tx, ty) {
-  const cachePath = path.join(CACHE_DIR, `${tx}_${ty}.png`);
+async function getTile(tx, ty, z = Z) {
+  const dir = path.join(ROOT, ".terrain-cache", String(z));
+  const cachePath = path.join(dir, `${tx}_${ty}.png`);
   if (!(await exists(cachePath))) {
-    const url = `${TILE_BASE}/${Z}/${tx}/${ty}.png`;
+    const url = `${TILE_BASE}/${z}/${tx}/${ty}.png`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`tile ${tx},${ty} HTTP ${res.status}`);
-    await mkdir(CACHE_DIR, { recursive: true });
+    await mkdir(dir, { recursive: true });
     await writeFile(cachePath, Buffer.from(await res.arrayBuffer()));
   }
   const { data, info } = await sharp(await readFile(cachePath))
@@ -95,8 +106,105 @@ async function getTile(tx, ty) {
   return { data, w: info.width, h: info.height, ch: info.channels };
 }
 
+const lng2tileXAt = (lng, z) => ((lng + 180) / 360) * 2 ** z;
+const lat2tileYAt = (lat, z) =>
+  ((1 - Math.asinh(Math.tan(lat * DEG)) / Math.PI) / 2) * 2 ** z;
+
+/** Download, stitch and resample one tier into a Float32Array grid. */
+async function buildTier(z, bbox, outW, outH, label) {
+  const x0 = Math.floor(lng2tileXAt(bbox.lngMin, z));
+  const x1 = Math.floor(lng2tileXAt(bbox.lngMax, z));
+  const y0 = Math.floor(lat2tileYAt(bbox.latMax, z));
+  const y1 = Math.floor(lat2tileYAt(bbox.latMin, z));
+  const cols = x1 - x0 + 1;
+  const rows = y1 - y0 + 1;
+  console.log(`${label}: z${z}, ${cols * rows} tiles`);
+  const gridW = cols * 256;
+  const gridH = rows * 256;
+  const grid = new Float32Array(gridW * gridH);
+  for (let ty = y0; ty <= y1; ty++) {
+    for (let tx = x0; tx <= x1; tx++) {
+      const { data, w, h, ch } = await getTile(tx, ty, z);
+      const ox = (tx - x0) * 256;
+      const oy = (ty - y0) * 256;
+      for (let py = 0; py < h; py++) {
+        for (let px = 0; px < w; px++) {
+          const s = (py * w + px) * ch;
+          grid[(oy + py) * gridW + (ox + px)] = decode(data[s], data[s + 1], data[s + 2]);
+        }
+      }
+    }
+  }
+  const sample = (fx, fy) => {
+    fx = Math.max(0, Math.min(gridW - 1.001, fx));
+    fy = Math.max(0, Math.min(gridH - 1.001, fy));
+    const x = Math.floor(fx);
+    const y = Math.floor(fy);
+    const dx = fx - x;
+    const dy = fy - y;
+    return (
+      grid[y * gridW + x] * (1 - dx) * (1 - dy) +
+      grid[y * gridW + x + 1] * dx * (1 - dy) +
+      grid[(y + 1) * gridW + x] * (1 - dx) * dy +
+      grid[(y + 1) * gridW + x + 1] * dx * dy
+    );
+  };
+  const out = new Float32Array(outW * outH);
+  for (let oy = 0; oy < outH; oy++) {
+    const lat = bbox.latMax - (oy / (outH - 1)) * (bbox.latMax - bbox.latMin);
+    const gy = (lat2tileYAt(lat, z) - y0) * 256;
+    for (let ox = 0; ox < outW; ox++) {
+      const lng = bbox.lngMin + (ox / (outW - 1)) * (bbox.lngMax - bbox.lngMin);
+      const gx = (lng2tileXAt(lng, z) - x0) * 256;
+      out[oy * outW + ox] = sample(gx, gy);
+    }
+  }
+  return out;
+}
+
 // Terrarium: elevation(m) = (R*256 + G + B/256) - 32768
 const decode = (r, g, b) => r * 256 + g + b / 256 - 32768;
+
+/**
+ * Raise inland depressions above the waterline. The global water plane sits at
+ * y=0, so any below-sea-level cell NOT hydrologically connected to the Pacific
+ * (Central Valley floor, Tulare basin, Delta islands behind sills) would show
+ * "ocean" inland. Flood-fill from the open-ocean west edge through below-water
+ * cells; whatever stays unreached is land — floor it safely above the plane.
+ */
+function raiseInlandDepressions(grid, w, h) {
+  const PASSABLE = 0.5; // metres — water can spread through cells below this
+  const visited = new Uint8Array(w * h);
+  const queue = [];
+  for (let y = 0; y < h; y++) {
+    if (grid[y * w] < PASSABLE) {
+      visited[y * w] = 1;
+      queue.push(y * w);
+    }
+  }
+  while (queue.length) {
+    const i = queue.pop();
+    const x = i % w;
+    const y = (i / w) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+      const ni = ny * w + nx;
+      if (visited[ni] || grid[ni] >= PASSABLE) continue;
+      visited[ni] = 1;
+      queue.push(ni);
+    }
+  }
+  let raised = 0;
+  for (let i = 0; i < grid.length; i++) {
+    if (!visited[i] && grid[i] < 3) {
+      grid[i] = 6; // above the plane with margin against far-distance z-fighting
+      raised++;
+    }
+  }
+  return raised;
+}
 
 // Separable box blur — turns single-pixel data spikes into readable ridgelines.
 function boxBlur(src, w, h, radius) {
@@ -228,6 +336,7 @@ async function main() {
     if (out[i] > max) max = out[i];
   }
   console.log(`Heightmap ${OUT_W}x${OUT_H}: ${min.toFixed(0)}m..${max.toFixed(0)}m`);
+  console.log(`  raised ${raiseInlandDepressions(out, OUT_W, OUT_H)} inland below-sea cells (core)`);
 
   // lat/lng -> scene coordinates (mild N-S compression).
   const sceneX = (lng) => ((lng - BBOX.lngMin) / (BBOX.lngMax - BBOX.lngMin)) * SCENE_WIDTH - SCENE_WIDTH / 2;
@@ -273,11 +382,31 @@ async function main() {
     elevMeters: Math.round(sampleLngLat(p.lng, p.lat)),
   }));
 
+  // ---- far tier: surrounding California at z8 (lazy-loaded by the client) ----
+  let far = await buildTier(FAR_Z, FAR_BBOX, FAR_W, FAR_H, "Far tier");
+  for (let i = 0; i < far.length; i++) {
+    let e = far[i] + SEA_LEVEL_OFFSET;
+    if (e < OCEAN_FLOOR_M) e = OCEAN_FLOOR_M;
+    if (e > FAR_CLAMP_MAX) e = FAR_CLAMP_MAX;
+    far[i] = e;
+  }
+  far = boxBlur(far, FAR_W, FAR_H, 1);
+  console.log(`  raised ${raiseInlandDepressions(far, FAR_W, FAR_H)} inland below-sea cells (far)`);
+  const farQuant = new Int16Array(far.length);
+  for (let i = 0; i < far.length; i++) farQuant[i] = Math.round(far[i]);
+
   const meta = {
     z: Z,
     bbox: BBOX,
     width: OUT_W,
     height: OUT_H,
+    far: {
+      z: FAR_Z,
+      bbox: FAR_BBOX,
+      width: FAR_W,
+      height: FAR_H,
+      clampMax: FAR_CLAMP_MAX,
+    },
     sceneWidth: SCENE_WIDTH,
     sceneDepth: SCENE_DEPTH,
     seaLevel: 0,
@@ -320,6 +449,7 @@ async function main() {
 
   await mkdir(OUT_DIR, { recursive: true });
   await writeFile(path.join(OUT_DIR, "heightmap.bin"), Buffer.from(quantized.buffer));
+  await writeFile(path.join(OUT_DIR, "far.bin"), Buffer.from(farQuant.buffer));
   await writeFile(path.join(OUT_DIR, "meta.json"), JSON.stringify(meta, null, 2));
   await writeFile(
     path.join(OUT_DIR, "anchors.json"),

@@ -8,6 +8,18 @@
   },
   "width": 640,
   "height": 896,
+  "far": {
+    "z": 8,
+    "bbox": {
+      "lngMin": -124.5,
+      "lngMax": -118.8,
+      "latMin": 34.6,
+      "latMax": 40
+    },
+    "width": 512,
+    "height": 544,
+    "clampMax": 3000
+  },
   "sceneWidth": 15,
   "sceneDepth": 19,
   "seaLevel": 0,

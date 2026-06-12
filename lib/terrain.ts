@@ -4,11 +4,20 @@
  * (~1MB raw); it sits behind the lazy 3D bundle so it never blocks first paint.
  */
 
+export interface FarMeta {
+  z: number;
+  bbox: { lngMin: number; lngMax: number; latMin: number; latMax: number };
+  width: number;
+  height: number;
+  clampMax: number;
+}
+
 export interface TerrainMeta {
   z: number;
   bbox: { lngMin: number; lngMax: number; latMin: number; latMax: number };
   width: number;
   height: number;
+  far: FarMeta;
   sceneWidth: number;
   sceneDepth: number;
   seaLevel: number;
@@ -71,6 +80,58 @@ export function loadTerrain(): Promise<TerrainData> {
     });
   }
   return cache;
+}
+
+export interface FarData {
+  meta: TerrainMeta;
+  heights: Float32Array;
+}
+
+let farCache: Promise<FarData> | null = null;
+
+/**
+ * The secondary topography tier (the rest of California at z8), fetched
+ * lazily AFTER the scene is up — it exists purely so the terrain continues
+ * naturally to the fog wall, and must never compete with the initial load.
+ */
+export function loadFarTerrain(): Promise<FarData> {
+  if (!farCache) {
+    farCache = (async () => {
+      const [{ meta }, bin] = await Promise.all([
+        loadTerrain(),
+        fetch("/terrain/far.bin").then((r) => r.arrayBuffer()),
+      ]);
+      return { meta, heights: Float32Array.from(new Int16Array(bin)) } as FarData;
+    })();
+    farCache.catch(() => {
+      farCache = null;
+    });
+  }
+  return farCache;
+}
+
+/** Scene (x,z) -> elevation (metres) from the far tier (bilinear). */
+export function farElevationAtScene(d: FarData, x: number, z: number): number {
+  const { bbox, sceneWidth, sceneDepth, far } = d.meta;
+  // scene -> real lng/lat via the core transform, then into the far grid
+  const lng = bbox.lngMin + ((x + sceneWidth / 2) / sceneWidth) * (bbox.lngMax - bbox.lngMin);
+  const lat = bbox.latMax - ((z + sceneDepth / 2) / sceneDepth) * (bbox.latMax - bbox.latMin);
+  const gx = ((lng - far.bbox.lngMin) / (far.bbox.lngMax - far.bbox.lngMin)) * (far.width - 1);
+  const gz = ((far.bbox.latMax - lat) / (far.bbox.latMax - far.bbox.latMin)) * (far.height - 1);
+  const cx = Math.max(0, Math.min(far.width - 1.001, gx));
+  const cz = Math.max(0, Math.min(far.height - 1.001, gz));
+  const x0 = Math.floor(cx);
+  const z0 = Math.floor(cz);
+  const dx = cx - x0;
+  const dz = cz - z0;
+  const h = d.heights;
+  const W = far.width;
+  return (
+    h[z0 * W + x0] * (1 - dx) * (1 - dz) +
+    h[z0 * W + x0 + 1] * dx * (1 - dz) +
+    h[(z0 + 1) * W + x0] * (1 - dx) * dz +
+    h[(z0 + 1) * W + x0 + 1] * dx * dz
+  );
 }
 
 /** Bilinear elevation (metres) at fractional grid coords. */

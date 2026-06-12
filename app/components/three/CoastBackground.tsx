@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { loadTerrain, type TerrainData } from "@/lib/terrain";
+import { loadTerrain, loadFarTerrain, type TerrainData, type FarData } from "@/lib/terrain";
 import type { Conditions } from "@/lib/ndbc";
 import CoastScene from "./CoastScene";
 
@@ -26,7 +26,32 @@ export default function CoastBackground({
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<TerrainData | null>(null);
+  const [far, setFar] = useState<FarData | null>(null);
   const [ready, setReady] = useState(false);
+
+  // Secondary tier: the surrounding California topography streams in on idle
+  // AFTER the scene has presented — purely to extend the land to the fog wall;
+  // it must never compete with the initial load. Failure is cosmetic: the
+  // haze plain simply stays.
+  useEffect(() => {
+    if (!ready) return;
+    let alive = true;
+    const kick = () => {
+      loadFarTerrain()
+        .then((f) => {
+          if (alive) setFar(f);
+        })
+        .catch(() => {});
+    };
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    };
+    if (w.requestIdleCallback) w.requestIdleCallback(kick, { timeout: 4000 });
+    else setTimeout(kick, 1500);
+    return () => {
+      alive = false;
+    };
+  }, [ready]);
 
   useEffect(() => {
     let alive = true;
@@ -62,6 +87,7 @@ export default function CoastBackground({
         {data && (
           <CoastScene
             data={data}
+            far={far}
             conditions={conditions}
             eventSource={wrapperRef}
             onReady={() => setReady(true)}

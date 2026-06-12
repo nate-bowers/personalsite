@@ -39,8 +39,10 @@ const RAMP: [number, THREE.Color][] = [
 
 const STEEP = new THREE.Color("#41633f"); // conifer dark green (steep faces)
 const HIGH_FOREST = new THREE.Color("#3c5a3d");
+const SNOW = new THREE.Color("#efe9f2"); // warm-pink alpenglow white
 
-function albedo(elev: number, slope: number, out: THREE.Color) {
+// shared with the far tier (FarLayer) so both tiers grade identically
+export function albedo(elev: number, slope: number, out: THREE.Color) {
   // base by elevation
   if (elev <= RAMP[0][0]) out.copy(RAMP[0][1]);
   else {
@@ -61,6 +63,9 @@ function albedo(elev: number, slope: number, out: THREE.Color) {
     out.lerp(STEEP, steepT * 0.8);
     out.lerp(HIGH_FOREST, Math.max(0, highT - steepT * 0.3));
   }
+  // snowcaps on the high Sierra (far tier only — the coast ranges never reach this)
+  const snowT = THREE.MathUtils.smoothstep(elev, 2050, 2600);
+  if (snowT > 0) out.lerp(SNOW, snowT);
   return out;
 }
 
@@ -74,7 +79,7 @@ function warp(t: number, half: number, edge: number) {
   return Math.sign(u) * (half + s * s * (edge - half));
 }
 
-const vertexShader = /* glsl */ `
+export const terrainVertexShader = /* glsl */ `
   varying vec3 vWorldPos;
   varying vec3 vNormal;
   varying vec3 vColor;
@@ -87,7 +92,7 @@ const vertexShader = /* glsl */ `
   }
 `;
 
-const fragmentShader = /* glsl */ `
+export const terrainFragmentShader = /* glsl */ `
   uniform vec3 uSunDir;
   uniform vec3 uSunGlow;
   uniform vec3 uLandShade;
@@ -241,8 +246,8 @@ export default function Terrain({
     <mesh geometry={geometry}>
       <shaderMaterial
         uniforms={uniforms}
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
+        vertexShader={terrainVertexShader}
+        fragmentShader={terrainFragmentShader}
         vertexColors
       />
     </mesh>
