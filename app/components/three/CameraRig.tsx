@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import { usePathname } from "next/navigation";
 import * as THREE from "three";
@@ -18,11 +18,23 @@ import type { Anchor } from "@/lib/terrain";
 const HOME_POS = new THREE.Vector3(-11.0, 8.0, 7.0);
 const HOME_LOOK = new THREE.Vector3(2.2, 2.0, -1.8);
 
+// Dev-only: ?debugcam=px,py,pz,tx,ty,tz pins the camera for the visual
+// iteration loop (model close-ups). Never active in production builds.
+function debugCam(): { pos: THREE.Vector3; look: THREE.Vector3 } | null {
+  if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("debugcam");
+  if (!raw) return null;
+  const n = raw.split(",").map(Number);
+  if (n.length !== 6 || n.some((v) => !Number.isFinite(v))) return null;
+  return { pos: new THREE.Vector3(n[0], n[1], n[2]), look: new THREE.Vector3(n[3], n[4], n[5]) };
+}
+
 export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
   const { camera } = useThree();
   const pathname = usePathname();
   const slug = pathname.replace(/^\//, "");
   const anchor = anchors.find((a) => a.slug === slug) ?? null;
+  const dbg = useMemo(() => debugCam(), []);
 
   const desiredPos = useRef(new THREE.Vector3());
   const desiredLook = useRef(new THREE.Vector3());
@@ -30,6 +42,11 @@ export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
+    if (dbg) {
+      camera.position.copy(dbg.pos);
+      camera.lookAt(dbg.look);
+      return;
+    }
     if (anchor) {
       // low shot: offshore of the buoy, looking past it toward the coast,
       // buoy settling into the lower third of the frame

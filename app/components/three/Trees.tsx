@@ -11,11 +11,11 @@ import {
 } from "@/lib/terrain";
 
 // keep clearings around the landmarks so they read instantly
-const CLEARINGS: [number, number][] = [
-  [-122.1661, 37.4275], // Hoover Tower
-  [-122.2578, 37.8721], // Campanile
-  [-121.9696, 37.4033], // Levi's Stadium
-  [-122.4783, 37.8199], // Golden Gate approaches
+const CLEARINGS: [number, number, number][] = [
+  [-122.1661, 37.4275, 0.55], // Hoover Tower
+  [-122.2578, 37.8721, 0.55], // Campanile
+  [-121.9696, 37.4033, 0.95], // Levi's Stadium (rectangular footprint)
+  [-122.4783, 37.8199, 0.9], // Golden Gate approaches (full span)
 ];
 
 /**
@@ -82,9 +82,12 @@ function buildForest(data: TerrainData) {
   const [, marinZ] = lngLatToScene(meta, -122.6, 37.82); // north of the gate
   const [bigSurX, bigSurZ] = lngLatToScene(meta, -121.9, 36.6);
 
-  const clearings = CLEARINGS.map(([lng, lat]) => lngLatToScene(meta, lng, lat));
+  const clearings = CLEARINGS.map(([lng, lat, r]) => {
+    const [cx, cz] = lngLatToScene(meta, lng, lat);
+    return [cx, cz, r] as [number, number, number];
+  });
   const inClearing = (x: number, z: number) =>
-    clearings.some(([cx, cz]) => (x - cx) * (x - cx) + (z - cz) * (z - cz) < 0.55 * 0.55);
+    clearings.some(([cx, cz, r]) => (x - cx) * (x - cx) + (z - cz) * (z - cz) < r * r);
 
   const conifers: Instance[] = [];
   const cypress: Instance[] = [];

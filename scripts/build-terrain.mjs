@@ -73,7 +73,6 @@ const PLACES = [
 
 const TILE_BASE = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium";
 const ROOT = process.cwd();
-const CACHE_DIR = path.join(ROOT, ".terrain-cache", String(Z));
 const OUT_DIR = path.join(ROOT, "public", "terrain");
 
 const DEG = Math.PI / 180;
