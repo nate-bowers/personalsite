@@ -1,57 +1,85 @@
-[
-  {
-    "slug": "about",
-    "label": "About",
-    "place": "STINSON",
-    "lat": 37.9,
-    "lng": -122.72,
-    "x": -4.447,
-    "z": -4.725,
-    "elevMeters": -12,
-    "terrainY": -0.02
-  },
-  {
-    "slug": "resume",
-    "label": "Resume",
-    "place": "OCEAN BEACH",
-    "lat": 37.7,
-    "lng": -122.57,
-    "x": -2.456,
-    "z": -1.35,
-    "elevMeters": -174,
-    "terrainY": -0.296
-  },
-  {
-    "slug": "projects",
-    "label": "Projects",
-    "place": "MAVERICKS",
-    "lat": 37.5,
-    "lng": -122.54,
-    "x": -2.058,
-    "z": 2.025,
-    "elevMeters": -272,
-    "terrainY": -0.462
-  },
-  {
-    "slug": "contact",
-    "label": "Contact",
-    "place": "HALF MOON BAY",
-    "lat": 37.44,
-    "lng": -122.55,
-    "x": -2.19,
-    "z": 3.038,
-    "elevMeters": -353,
-    "terrainY": -0.6
-  },
-  {
-    "slug": "ask",
-    "label": "Ask Nate",
-    "place": "STN 46012",
-    "lat": 37.36,
-    "lng": -122.88,
-    "x": -6.571,
-    "z": 4.388,
-    "elevMeters": -360,
-    "terrainY": -0.612
-  }
-]
+{
+  "anchors": [
+    {
+      "slug": "about",
+      "label": "About",
+      "place": "STINSON",
+      "lat": 37.9,
+      "lng": -122.65200000000002,
+      "x": -2.224,
+      "z": -5.905,
+      "elevMeters": -11,
+      "terrainY": -0.018
+    },
+    {
+      "slug": "projects",
+      "label": "Projects",
+      "place": "MAVERICKS",
+      "lat": 37.495,
+      "lng": -122.503,
+      "x": -0.909,
+      "z": -2.439,
+      "elevMeters": -12,
+      "terrainY": -0.019
+    },
+    {
+      "slug": "ask",
+      "label": "Ask Nate",
+      "place": "STN 46012",
+      "lat": 37.36,
+      "lng": -122.88,
+      "x": -4.235,
+      "z": -1.284,
+      "elevMeters": -160,
+      "terrainY": -0.256
+    },
+    {
+      "slug": "resume",
+      "label": "Resume",
+      "place": "STEAMER LANE",
+      "lat": 36.951,
+      "lng": -122.10200000000009,
+      "x": 2.629,
+      "z": 2.217,
+      "elevMeters": -13,
+      "terrainY": -0.021
+    },
+    {
+      "slug": "contact",
+      "label": "Contact",
+      "place": "BIG SUR",
+      "lat": 36.27,
+      "lng": -121.85100000000006,
+      "x": 4.844,
+      "z": 8.045,
+      "elevMeters": -16,
+      "terrainY": -0.026
+    }
+  ],
+  "places": [
+    {
+      "name": "STINSON",
+      "x": -0.882,
+      "z": -6.205,
+      "elevMeters": -5
+    },
+    {
+      "name": "MAVERICKS",
+      "x": 0.618,
+      "z": -2.653,
+      "elevMeters": 128
+    },
+    {
+      "name": "SANTA CRUZ",
+      "x": 4.412,
+      "z": 1.626,
+      "elevMeters": 166
+    },
+    {
+      "name": "BIG SUR",
+      "x": 6.706,
+      "z": 7.532,
+      "elevMeters": 908
+    }
+  ]
+}

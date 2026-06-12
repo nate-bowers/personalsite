@@ -7,16 +7,16 @@ import * as THREE from "three";
 import type { Anchor } from "@/lib/terrain";
 
 /**
- * The camera is on rails — no free-look (DESIGN-PHASE2.md §3). Default: offshore,
- * elevated, coast diagonal, slow ambient drift. When a section route is active it
- * flies a smooth eased curve to a low shot of that buoy with the coast behind; back
- * to "/" returns home. Retargeting mid-flight (another buoy, or back) is automatic
- * because we always lerp toward the *current* target.
+ * The camera is on rails — no free-look (DESIGN-PHASE2.md §3). Default shot:
+ * offshore over the Pacific, elevated, looking north-east so the coastline
+ * runs diagonally from upper-left (Stinson) to lower-right (Big Sur) with
+ * water lower-left, land upper-right, and sky sharing the frame. Slow ambient
+ * drift so the scene breathes. Clicking a buoy (route change) flies a smooth
+ * eased path to a low shot — buoy lower-third, coast behind. Retargeting
+ * mid-flight is automatic because we always lerp toward the current target.
  */
-// 3/4 aerial over the Bay Area: offshore to the south-west (Pacific), elevated,
-// looking north-east across the bay and the East Bay hills.
-const HOME_POS = new THREE.Vector3(-10, 8.5, 9.5);
-const HOME_LOOK = new THREE.Vector3(0.5, -0.6, -1.5);
+const HOME_POS = new THREE.Vector3(-5.6, 7.2, 13.2);
+const HOME_LOOK = new THREE.Vector3(1.6, 0.45, -3.2);
 
 export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
   const { camera } = useThree();
@@ -28,23 +28,26 @@ export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
   const desiredLook = useRef(new THREE.Vector3());
   const look = useRef(HOME_LOOK.clone());
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
     if (anchor) {
-      // low shot: just offshore of the buoy and slightly up, coast (east/+x) behind it
-      desiredPos.current.set(anchor.x - 2.6, 1.5, anchor.z + 2.4);
-      desiredLook.current.set(anchor.x + 0.8, 0.15, anchor.z - 0.6);
+      // low shot: offshore of the buoy, looking past it toward the coast,
+      // buoy settling into the lower third of the frame
+      desiredPos.current.set(anchor.x - 1.55, 0.6, anchor.z + 1.3);
+      desiredLook.current.set(anchor.x + 0.5, 0.28, anchor.z - 0.45);
     } else {
       desiredPos.current.set(
-        HOME_POS.x + Math.sin(t * 0.07) * 0.45,
-        HOME_POS.y + Math.cos(t * 0.05) * 0.22,
-        HOME_POS.z + Math.sin(t * 0.04) * 0.3,
+        HOME_POS.x + Math.sin(t * 0.07) * 0.5,
+        HOME_POS.y + Math.cos(t * 0.05) * 0.25,
+        HOME_POS.z + Math.sin(t * 0.04) * 0.35,
       );
       desiredLook.current.copy(HOME_LOOK);
     }
-    // ~1.8s ease feel; smooth and interruptible
-    camera.position.lerp(desiredPos.current, 0.045);
-    look.current.lerp(desiredLook.current, 0.045);
+    // ~1.8s ease feel; smooth, interruptible, and frame-rate independent
+    // (0.045/frame at 60fps, normalized to wall time for 120Hz/30Hz displays)
+    const k = 1 - Math.pow(1 - 0.045, delta * 60);
+    camera.position.lerp(desiredPos.current, k);
+    look.current.lerp(desiredLook.current, k);
     camera.lookAt(look.current);
   });
 

@@ -4,60 +4,88 @@ import { fileURLToPath } from "node:url";
 
 const root = new URL("../public/terrain/", import.meta.url);
 const meta = JSON.parse(readFileSync(fileURLToPath(new URL("meta.json", root)), "utf8"));
-const anchors = JSON.parse(readFileSync(fileURLToPath(new URL("anchors.json", root)), "utf8"));
+const anchorsFile = JSON.parse(
+  readFileSync(fileURLToPath(new URL("anchors.json", root)), "utf8"),
+);
+const { anchors, places } = anchorsFile;
 const buf = readFileSync(fileURLToPath(new URL("heightmap.bin", root)));
-const height = new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4);
+const height = new Int16Array(buf.buffer, buf.byteOffset, buf.byteLength / 2);
 
-const { width: W, height: H } = meta;
-const at = (x: number, y: number) => height[y * W + x];
+const { width: W, height: H, bbox } = meta;
 
-describe("terrain heightmap", () => {
-  it("has the expected dimensions", () => {
-    expect(W).toBe(1024);
+// elevation at a real-world coordinate
+const at = (lng: number, lat: number) => {
+  const x = Math.round(((lng - bbox.lngMin) / (bbox.lngMax - bbox.lngMin)) * (W - 1));
+  const y = Math.round(((bbox.latMax - lat) / (bbox.latMax - bbox.latMin)) * (H - 1));
+  return height[y * W + x];
+};
+
+describe("terrain heightmap (Stinson -> Big Sur)", () => {
+  it("has the expected dimensions and int16 encoding", () => {
+    expect(W).toBe(640);
     expect(H).toBe(896);
+    expect(meta.encoding).toBe("int16");
     expect(height.length).toBe(W * H);
   });
 
-  it("contains real peaks and an ocean shelf", () => {
-    let min = Infinity;
-    let max = -Infinity;
-    for (let i = 0; i < height.length; i++) {
-      const v = height[i];
-      if (v < min) min = v;
-      if (v > max) max = v;
-    }
-    expect(max).toBeGreaterThan(1000); // Mt Tam / Santa Lucia ranges
-    expect(min).toBeLessThanOrEqual(0); // ocean present
+  it("covers the spec bounding box (38.05N..36.1N)", () => {
+    expect(bbox.latMax).toBeGreaterThanOrEqual(38.0);
+    expect(bbox.latMin).toBeLessThanOrEqual(36.25);
+    expect(bbox.lngMin).toBeLessThanOrEqual(-122.9);
   });
 
-  it("has the inland ranges visibly higher than the coastal shelf", () => {
-    // Eastern (inland) half should tower over the western (offshore) quarter.
-    let maxInland = -Infinity;
-    let maxOffshore = -Infinity;
-    for (let y = 0; y < H; y++) {
-      for (let x = Math.floor(W / 2); x < W; x++) maxInland = Math.max(maxInland, at(x, y));
-      for (let x = 0; x < Math.floor(W / 4); x++) maxOffshore = Math.max(maxOffshore, at(x, y));
-    }
-    expect(maxInland).toBeGreaterThan(maxOffshore + 300);
-    expect(maxInland).toBeGreaterThan(800);
+  it("Mt Tamalpais and the Santa Lucias tower over the coastal shelf", () => {
+    const mtTam = at(-122.596, 37.924);
+    const santaLucia = at(-121.62, 36.25); // ridge crest above the Big Sur coast
+    const shelf = at(-123.0, 37.3); // open Pacific
+    expect(mtTam).toBeGreaterThan(350);
+    expect(santaLucia).toBeGreaterThan(800);
+    expect(shelf).toBeLessThan(-50);
+  });
+
+  it("the bay exists: water inside the Golden Gate, carved from real data", () => {
+    expect(at(-122.478, 37.82)).toBeLessThan(0); // the strait itself
+    expect(at(-122.3, 37.7)).toBeLessThan(0); // central SF Bay
+    expect(at(-122.2, 37.55)).toBeLessThan(2); // toward the South Bay
+    expect(at(-122.44, 37.77)).toBeGreaterThan(0); // San Francisco is land
+    expect(at(-122.55, 37.85)).toBeGreaterThan(0); // Marin headlands are land
+  });
+
+  it("Monterey Bay's curve is water", () => {
+    expect(at(-121.9, 36.8)).toBeLessThan(0);
+    expect(at(-121.85, 36.7)).toBeLessThan(0);
   });
 });
 
-describe("terrain anchors", () => {
-  it("has all five sections within scene bounds", () => {
+describe("terrain anchors (spec spot map)", () => {
+  it("has all five sections at the spec spots, spread across the scene", () => {
     const slugs = anchors.map((a: { slug: string }) => a.slug).sort();
     expect(slugs).toEqual(["about", "ask", "contact", "projects", "resume"]);
     for (const a of anchors) {
       expect(Math.abs(a.x)).toBeLessThanOrEqual(meta.sceneWidth / 2 + 0.001);
       expect(Math.abs(a.z)).toBeLessThanOrEqual(meta.sceneDepth / 2 + 0.001);
-      expect(Number.isFinite(a.elevMeters)).toBe(true);
+    }
+    // spread: Stinson is far north, Big Sur far south — not a cluster
+    const about = anchors.find((a: { slug: string }) => a.slug === "about");
+    const contact = anchors.find((a: { slug: string }) => a.slug === "contact");
+    expect(contact.z - about.z).toBeGreaterThan(10);
+  });
+
+  it("every buoy floats: all anchors in negative-elevation cells", () => {
+    for (const a of anchors) {
+      expect(a.elevMeters, `${a.place} should be in the water`).toBeLessThan(-5);
     }
   });
 
-  it("places the offshore RAG buoy (Station 46012) in a negative-elevation cell", () => {
+  it("Ask Nate is the real offshore Station 46012", () => {
     const ask = anchors.find((a: { slug: string }) => a.slug === "ask");
-    expect(ask).toBeTruthy();
     expect(ask.place).toContain("46012");
-    expect(ask.elevMeters).toBeLessThan(0);
+    expect(ask.lat).toBeCloseTo(37.36, 1);
+    expect(ask.elevMeters).toBeLessThan(-50);
+  });
+
+  it("carries the four terrain place names", () => {
+    const names = places.map((p: { name: string }) => p.name).sort();
+    expect(names).toEqual(["BIG SUR", "MAVERICKS", "SANTA CRUZ", "STINSON"]);
   });
 });

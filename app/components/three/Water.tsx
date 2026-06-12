@@ -5,82 +5,55 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Conditions } from "@/lib/ndbc";
 import { oceanParams } from "@/lib/ocean-map";
+import { gerstnerGlsl, DISP_FADE } from "@/lib/gerstner";
+import type { OpennessField } from "@/lib/openness";
+import { TOKENS, HEIGHT_FOG_GLSL } from "./atmosphere";
 
 /**
- * Gerstner-displaced water plane. Amplitude / speed / chop come from the live buoy
- * via the shared oceanParams() mapping (identical to the 2D ocean). Two-tone shading
- * (near/far water tokens) plus an elongated sun-glitter specular toward the western
- * sun. Manual exponential fog matches the terrain haze. See DESIGN-PHASE2.md §4.
+ * Gerstner-displaced water plane. Amplitude / speed / chop come from the live
+ * buoy via the shared oceanParams() mapping; the wave maths is GENERATED from
+ * lib/gerstner.ts so the CPU twin (buoys, ferry) rides the identical surface.
+ * Per-vertex `aOpen` (real bathymetry + swell shelter) keeps the bay calm and
+ * shoals the swell at the coast. Two-tone shading per the locked golden-hour
+ * tokens, elongated sun-glitter path, shared exponential height fog.
+ *
+ * Displacement fades out past DISP_FAR so the far water is a flat silhouette —
+ * this (plus a sky dome that fully encloses the plane) is what killed the
+ * wavy banding that used to bleed into the sky.
  */
+
+const SIZE = 320; // plane size — fully inside the 500-radius sky dome
+const SEGS = 180; // ~65k tris; fragment ripples carry the fine detail
 
 const vertexShader = /* glsl */ `
   uniform float uTime;
   uniform float uAmp;
   uniform float uSpeed;
   uniform float uChop;
-  uniform float uCoastX;
+  uniform vec3 uCamPos;
+  attribute float aOpen;
   varying vec3 vWorldPos;
   varying vec3 vNormal;
-  varying float vHeight;
-  varying float vAmp;
-
-  const float PI = 3.14159265359;
+  varying float vOpen;
 
   void main() {
-    vec2 p = position.xy;       // horizontal plane coords (pre-rotation); p.x = world x
+    vec2 p = position.xy; // plane-local: p.x = world x, p.y = -world z
 
-    // Swell lives on the open Pacific (west, small x) and calms toward the coast and
-    // the bay (east, larger x), so waves roll into the shore instead of filling the bay.
-    float coastAmp = 1.0 - smoothstep(uCoastX - 2.5, uCoastX + 1.0, p.x);
-    vAmp = coastAmp;
-    float A = uAmp * coastAmp;
+    // amplitude = live conditions * local exposure, faded with camera distance
+    // (DISP_FADE shared with the CPU twin so props ride the rendered surface)
+    float distFade = 1.0 - smoothstep(${DISP_FADE.NEAR.toFixed(1)}, ${DISP_FADE.FAR.toFixed(1)}, distance(uCamPos.xz, vec2(p.x, -p.y)));
+    float A0 = uAmp * aOpen * distFade;
 
     float height = 0.0;
     vec2 horiz = vec2(0.0);
     vec3 nrm = vec3(0.0, 0.0, 1.0);
-
-    // Three Gerstner swells rolling toward the shore (north-east, toward the land).
-    vec2 d1 = normalize(vec2(1.0, 1.0));
-    float k1 = 2.0 * PI / 9.0;
-    float a1 = 0.11 * A;
-    float ph1 = k1 * dot(d1, p) + uTime * 1.3 * uSpeed;
-    float c1 = cos(ph1);
-    float s1 = sin(ph1);
-    horiz += 0.6 * a1 * d1 * c1;
-    height += a1 * s1;
-    nrm.x -= d1.x * k1 * a1 * c1;
-    nrm.y -= d1.y * k1 * a1 * c1;
-    nrm.z -= 0.6 * k1 * a1 * s1;
-
-    vec2 d2 = normalize(vec2(1.0, 0.6));
-    float k2 = 2.0 * PI / 5.0;
-    float a2 = 0.06 * A;
-    float ph2 = k2 * dot(d2, p) + uTime * 1.7 * uSpeed;
-    float c2 = cos(ph2);
-    float s2 = sin(ph2);
-    horiz += 0.7 * a2 * d2 * c2;
-    height += a2 * s2;
-    nrm.x -= d2.x * k2 * a2 * c2;
-    nrm.y -= d2.y * k2 * a2 * c2;
-    nrm.z -= 0.7 * k2 * a2 * s2;
-
-    vec2 d3 = normalize(vec2(0.6, 1.0));
-    float k3 = 2.0 * PI / 2.6;
-    float a3 = 0.035 * (0.5 + uChop) * A;
-    float ph3 = k3 * dot(d3, p) + uTime * 2.2 * uSpeed;
-    float c3 = cos(ph3);
-    float s3 = sin(ph3);
-    horiz += 0.8 * a3 * d3 * c3;
-    height += a3 * s3;
-    nrm.x -= d3.x * k3 * a3 * c3;
-    nrm.y -= d3.y * k3 * a3 * c3;
-    nrm.z -= 0.8 * k3 * a3 * s3;
+    ${gerstnerGlsl}
 
     vec3 displaced = vec3(p + horiz, height);
-    vHeight = height;
     vec4 world = modelMatrix * vec4(displaced, 1.0);
     vWorldPos = world.xyz;
     vNormal = normalize(mat3(modelMatrix) * normalize(nrm));
+    vOpen = aOpen;
     gl_Position = projectionMatrix * viewMatrix * world;
   }
 `;
@@ -90,61 +63,119 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uFar;
   uniform vec3 uGlitter;
   uniform vec3 uSunDir;
-  uniform vec3 uFog;
-  uniform float uFogDensity;
   uniform float uChop;
   uniform float uTime;
   uniform vec3 uSkyHigh;
   uniform vec3 uSkyLow;
   varying vec3 vWorldPos;
   varying vec3 vNormal;
-  varying float vHeight;
-  varying float vAmp;
+  varying float vOpen;
+
+  ${HEIGHT_FOG_GLSL}
 
   void main() {
-    // moving ripple detail (shading only), faded toward the calm bay/inland
-    float ripple = vAmp * 0.85 + 0.15;
+    float dist = length(cameraPosition - vWorldPos);
+
+    // moving ripple detail (shading only): faded where the water is sheltered
+    // AND with distance (matching the vertex displacement fade) so the
+    // mid-distance sea settles into the far violet instead of moiré stripes.
+    // A floor keeps far normals from going mirror-flat — a mirror sea turns
+    // the sun into a razor line instead of a soft path.
+    float rippleDist = mix(0.3, 1.0, 1.0 - smoothstep(14.0, 34.0, dist));
+    float ripple = (vOpen * 0.8 + 0.2) * rippleDist;
     vec2 q = vWorldPos.xz;
-    float rx = (cos(q.x * 2.6 + uTime * 1.3) * 0.13 + cos(q.x * 5.9 - q.y * 1.4 + uTime * 2.1) * 0.07) * ripple;
-    float rz = (sin(q.y * 2.4 - uTime * 1.05) * 0.13 + sin(q.y * 6.2 + q.x * 1.1 - uTime * 1.8) * 0.07) * ripple;
+    float rx = (cos(q.x * 2.6 + uTime * 1.3) * 0.12 + cos(q.x * 6.1 - q.y * 1.4 + uTime * 2.1) * 0.07) * ripple;
+    float rz = (sin(q.y * 2.4 - uTime * 1.05) * 0.12 + sin(q.y * 6.4 + q.x * 1.1 - uTime * 1.8) * 0.07) * ripple;
     vec3 N = normalize(vNormal + vec3(rx, 0.0, rz));
     vec3 V = normalize(cameraPosition - vWorldPos);
     vec3 S = normalize(uSunDir);
     vec3 R = reflect(-V, N);
 
-    // two-tone base
+    // two-tone water per tokens: near deep blue -> far violet
     float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-    vec3 base = mix(uNear, uFar, clamp(fres * 1.2, 0.0, 1.0));
-    base += uGlitter * 0.04 * max(dot(N, S), 0.0);
+    vec3 base = mix(uNear, uFar, clamp(fres * 0.6, 0.0, 1.0));
 
-    // cheap sky reflection (stronger at grazing angles)
+    // cheap sky reflection at grazing angles
     vec3 sky = mix(uSkyLow, uSkyHigh, clamp(R.y * 0.5 + 0.3, 0.0, 1.0));
     float reflAmt = pow(1.0 - max(dot(N, V), 0.0), 4.0);
-    vec3 color = mix(base, sky, reflAmt * 0.5);
+    vec3 color = mix(base, sky, reflAmt * 0.18);
 
-    // sun glitter — a soft, elongated golden path toward the low sun (no hard dots)
-    float glint = pow(max(dot(R, S), 0.0), 42.0);
-    float glow = pow(max(dot(R, S), 0.0), 8.0);
-    color += uGlitter * (glint * 1.1 + glow * 0.5);
+    // sun glitter — the elongated golden path stretching from the horizon
+    // toward the camera along the sun azimuth (DESIGN-PHASE2.md §1/§4),
+    // softened (not killed) with distance; the ripple floor above keeps the
+    // far path scattered instead of a razor mirror line.
+    float glint = pow(max(dot(R, S), 0.0), 52.0);
+    float glow = pow(max(dot(R, S), 0.0), 24.0);
+    float pathFade = max(0.22, 1.0 - smoothstep(12.0, 42.0, dist));
+    color += uGlitter * (glint * 1.1 + glow * 0.16) * pathFade;
 
-    // exponential distance fog
-    float dist = length(cameraPosition - vWorldPos);
-    float fog = 1.0 - exp(-uFogDensity * dist);
-    color = mix(color, uFog, clamp(fog, 0.0, 1.0));
+    color = applyHeightFog(color, dist, vWorldPos.y);
 
     gl_FragColor = vec4(color, 1.0);
   }
 `;
 
+const farVertexShader = /* glsl */ `
+  varying vec3 vWorldPos;
+  void main() {
+    vec4 world = modelMatrix * vec4(position, 1.0);
+    vWorldPos = world.xyz;
+    gl_Position = projectionMatrix * viewMatrix * world;
+  }
+`;
+
+const farFragmentShader = /* glsl */ `
+  uniform vec3 uFar;
+  varying vec3 vWorldPos;
+  ${HEIGHT_FOG_GLSL}
+  void main() {
+    float dist = length(cameraPosition - vWorldPos);
+    gl_FragColor = vec4(applyHeightFog(uFar, dist, 0.0), 1.0);
+  }
+`;
+
+/** Flat fog-toned sea carrying the waterline out past the sky dome wall, so
+ * the Gerstner plane's corners never show against the sky. */
+function FarWater() {
+  const uniforms = useMemo(
+    () => ({ uFar: { value: new THREE.Color(TOKENS.waterFar) } }),
+    [],
+  );
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+      <ringGeometry args={[140, 1200, 48, 1]} />
+      <shaderMaterial
+        uniforms={uniforms}
+        vertexShader={farVertexShader}
+        fragmentShader={farFragmentShader}
+      />
+    </mesh>
+  );
+}
+
 export default function Water({
   conditions,
   sunDir,
+  openness,
 }: {
   conditions: Conditions;
   sunDir: [number, number, number];
+  openness: OpennessField;
 }) {
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const params = oceanParams(conditions);
+
+  const geometry = useMemo(() => {
+    const geo = new THREE.PlaneGeometry(SIZE, SIZE, SEGS, SEGS);
+    const pos = geo.attributes.position as THREE.BufferAttribute;
+    const open = new Float32Array(pos.count);
+    for (let i = 0; i < pos.count; i++) {
+      // plane-local -> world: (px, py) -> (x, -z)
+      open[i] = openness.sample(pos.getX(i), -pos.getY(i));
+    }
+    geo.setAttribute("aOpen", new THREE.BufferAttribute(open, 1));
+    return geo;
+  }, [openness]);
 
   const uniforms = useMemo(
     () => ({
@@ -152,15 +183,13 @@ export default function Water({
       uAmp: { value: params.ampScale },
       uSpeed: { value: params.speed },
       uChop: { value: params.windChop },
-      uNear: { value: new THREE.Color("#244a63") }, // golden-hour sea
-      uFar: { value: new THREE.Color("#3a3357") },
-      uGlitter: { value: new THREE.Color("#ffbe78") },
+      uCamPos: { value: new THREE.Vector3() },
+      uNear: { value: new THREE.Color(TOKENS.waterNear) },
+      uFar: { value: new THREE.Color(TOKENS.waterFar) },
+      uGlitter: { value: new THREE.Color(TOKENS.glitter) },
       uSunDir: { value: new THREE.Vector3(...sunDir) },
-      uFog: { value: new THREE.Color("#e7ab73") },
-      uFogDensity: { value: 0.014 },
-      uSkyHigh: { value: new THREE.Color("#6a6196") },
-      uSkyLow: { value: new THREE.Color("#f0a766") },
-      uCoastX: { value: 3.0 },
+      uSkyHigh: { value: new THREE.Color(TOKENS.skyZenith) },
+      uSkyLow: { value: new THREE.Color(TOKENS.skyLow) },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -171,23 +200,24 @@ export default function Water({
   uniforms.uSpeed.value = params.speed;
   uniforms.uChop.value = params.windChop;
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (matRef.current) {
       (matRef.current.uniforms.uTime.value as number) += delta;
+      (matRef.current.uniforms.uCamPos.value as THREE.Vector3).copy(state.camera.position);
     }
   });
 
   return (
-    // One large Gerstner plane. It's big enough that its far edge is fully dissolved
-    // into the fog at the horizon — no seam, no visible square edge.
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-      <planeGeometry args={[460, 460, 400, 400]} />
-      <shaderMaterial
-        ref={matRef}
-        uniforms={uniforms}
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-      />
-    </mesh>
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} geometry={geometry}>
+        <shaderMaterial
+          ref={matRef}
+          uniforms={uniforms}
+          vertexShader={vertexShader}
+          fragmentShader={fragmentShader}
+        />
+      </mesh>
+      <FarWater />
+    </group>
   );
 }

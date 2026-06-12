@@ -1,10 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import SeaSky from "./SeaSky";
 import Ocean from "./Ocean";
 import Controls from "./Controls";
+import Establishing from "./Establishing";
+import { loadTerrain } from "@/lib/terrain";
 import type { Conditions } from "@/lib/ndbc";
 
 export type RenderMode = "loading" | "2d" | "3d";
@@ -12,8 +14,12 @@ export type RenderMode = "loading" | "2d" | "3d";
 const ModeContext = createContext<RenderMode>("loading");
 export const useRenderMode = () => useContext(ModeContext);
 
-// The entire three.js scene is code-split behind the landing frame.
-const CoastBackground = dynamic(() => import("./three/CoastBackground"), { ssr: false });
+// The entire three.js scene is code-split behind the landing frame. While the
+// chunk streams, the scene area keeps the branded establishing state.
+const CoastBackground = dynamic(() => import("./three/CoastBackground"), {
+  ssr: false,
+  loading: () => <Establishing />,
+});
 
 /**
  * Decides the renderer once on the client (DESIGN-PHASE2.md §3): the 3D coast only
@@ -48,20 +54,35 @@ export default function RendererStage({
   conditions: Conditions;
   children: React.ReactNode;
 }) {
-  const mode = useSyncExternalStore<RenderMode>(subscribe, clientMode, () => "loading");
+  const detected = useSyncExternalStore<RenderMode>(subscribe, clientMode, () => "loading");
+  // honest degradation: if the terrain assets can't be fetched, the 3D path
+  // hands the stage to the 2D ocean instead of loading forever
+  const [terrainFailed, setTerrainFailed] = useState(false);
+  const mode: RenderMode = terrainFailed && detected === "3d" ? "2d" : detected;
 
   // "Take the controls" can override the live data feeding the ocean.
   const [override, setOverride] = useState<Conditions | null>(null);
   const effective = override ?? conditions;
 
+  // Preload the terrain assets in parallel with the lazy three.js chunk — by
+  // the time the chunk evaluates, the heightmap fetch is already in flight.
+  useEffect(() => {
+    if (mode === "3d") void loadTerrain().catch(() => {});
+  }, [mode]);
+
   return (
     <ModeContext.Provider value={mode}>
       {/* The golden-hour gradient is the base layer and the 3D streaming placeholder. */}
       <SeaSky />
-      {mode !== "3d" && <Ocean conditions={effective} />}
+      {/* The renderer decision happens once, before either stage paints: the 2D
+          ocean mounts ONLY when 2D is the decision — never as a 3D pre-state. */}
+      {mode === "2d" && <Ocean conditions={effective} />}
       {/* z-0 wrapper (owned by CoastBackground) so the canvas receives pointer events;
           the chrome (nav z-15, header z-20, panel z-30) stays above it. */}
-      {mode === "3d" && <CoastBackground conditions={effective} />}
+      {mode === "3d" && (
+        <CoastBackground conditions={effective} onUnavailable={() => setTerrainFailed(true)} />
+      )}
+      {mode === "loading" && <Establishing />}
       {children}
       {mode !== "loading" && <Controls live={conditions} override={override} setOverride={setOverride} />}
     </ModeContext.Provider>
