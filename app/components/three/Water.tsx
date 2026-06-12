@@ -29,7 +29,6 @@ const vertexShader = /* glsl */ `
   uniform float uTime;
   uniform float uAmp;
   uniform float uSpeed;
-  uniform float uChop;
   uniform vec3 uCamPos;
   attribute float aOpen;
   varying vec3 vWorldPos;
@@ -63,7 +62,6 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uFar;
   uniform vec3 uGlitter;
   uniform vec3 uSunDir;
-  uniform float uChop;
   uniform float uTime;
   uniform vec3 uSkyHigh;
   uniform vec3 uSkyLow;
@@ -182,7 +180,6 @@ export default function Water({
       uTime: { value: 0 },
       uAmp: { value: params.ampScale },
       uSpeed: { value: params.speed },
-      uChop: { value: params.windChop },
       uCamPos: { value: new THREE.Vector3() },
       uNear: { value: new THREE.Color(TOKENS.waterNear) },
       uFar: { value: new THREE.Color(TOKENS.waterFar) },
@@ -198,7 +195,6 @@ export default function Water({
   // keep conditions-driven uniforms current without recreating the material
   uniforms.uAmp.value = params.ampScale;
   uniforms.uSpeed.value = params.speed;
-  uniforms.uChop.value = params.windChop;
 
   useFrame((state, delta) => {
     if (matRef.current) {

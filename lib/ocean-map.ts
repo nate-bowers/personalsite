@@ -12,25 +12,19 @@ export const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.mi
 export interface OceanParams {
   waveHeightFt: number;
   periodS: number;
-  windKts: number;
   /** wave amplitude multiplier: 0.3x at 1ft -> 1.6x at 12ft, clamped */
   ampScale: number;
   /** animation speed: 8s period = baseline 1.0, inverse, clamped */
   speed: number;
-  /** high-frequency chop, 0..1, only above 15kts */
-  windChop: number;
 }
 
 export function oceanParams(c: Conditions): OceanParams {
   const waveHeightFt = c.waveHeightFt ?? 3;
   const periodS = c.periodS ?? 8;
-  const windKts = c.windKts ?? 0;
   return {
     waveHeightFt,
     periodS,
-    windKts,
     ampScale: clamp(0.3 + ((waveHeightFt - 1) / 11) * (1.6 - 0.3), 0.3, 1.6),
     speed: clamp(8 / periodS, 0.35, 2.2),
-    windChop: windKts > 15 ? clamp((windKts - 15) / 25, 0, 1) : 0,
   };
 }

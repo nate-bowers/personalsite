@@ -45,7 +45,7 @@ export default function Ocean({ conditions }: { conditions: Conditions }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const { ampScale, speed, windChop } = oceanParams(conditions);
+    const { ampScale, speed } = oceanParams(conditions);
 
     let width = 0;
     let height = 0;
@@ -79,9 +79,6 @@ export default function Ocean({ conditions }: { conditions: Conditions }) {
           let y = baseY;
           for (const c of L.comps) {
             y += c.amp * ampScale * Math.sin((2 * Math.PI / c.len) * x + c.phase + tSec * speed * L.speedMul);
-          }
-          if (L.front && windChop > 0) {
-            y += windChop * 4 * Math.sin(x * 0.25 + tSec * 6);
           }
           ctx.lineTo(x, y);
         }

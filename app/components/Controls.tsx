@@ -61,7 +61,6 @@ export default function Controls({
       ...live,
       waveHeightFt: live.waveHeightFt ?? 3,
       periodS: live.periodS ?? 10,
-      windKts: live.windKts ?? 8,
     };
   const set = (key: keyof Conditions, val: number) => setOverride({ ...c, [key]: val });
 
@@ -92,7 +91,6 @@ export default function Controls({
           </p>
           <Row label="wave" value={c.waveHeightFt ?? 3} min={1} max={20} step={0.5} unit="ft" onChange={(v) => set("waveHeightFt", v)} />
           <Row label="period" value={c.periodS ?? 10} min={4} max={20} step={0.5} unit="s" onChange={(v) => set("periodS", v)} />
-          <Row label="wind" value={c.windKts ?? 8} min={0} max={40} step={1} unit="kt" onChange={(v) => set("windKts", v)} />
           <button
             type="button"
             onClick={() => setOverride(null)}

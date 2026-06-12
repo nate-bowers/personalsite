@@ -1,5 +1,4 @@
 import type { Conditions } from "@/lib/ndbc";
-import { degToCompass } from "@/lib/ndbc";
 
 /**
  * The signature element: an always-visible instrument panel showing the live
@@ -7,11 +6,10 @@ import { degToCompass } from "@/lib/ndbc";
  * Server component — receives already-fetched conditions, never fetches.
  */
 export default function Readout({ conditions }: { conditions: Conditions }) {
-  const { stationId, waveHeightFt, periodS, windKts, windDir, observedAt, source } = conditions;
+  const { stationId, waveHeightFt, periodS, observedAt, source } = conditions;
   const isOffline = source === "default";
 
   const fmt = (n: number | null, unit: string) => (n === null ? "—" : `${n}${unit}`);
-  const compass = degToCompass(windDir);
   const observedLabel = observedAt
     ? new Date(observedAt).toLocaleTimeString("en-US", {
         timeZone: "America/Los_Angeles",
@@ -43,13 +41,6 @@ export default function Readout({ conditions }: { conditions: Conditions }) {
           </p>
           <p className="mt-0.5">
             {fmt(waveHeightFt, " ft")} @ {fmt(periodS, "s")}
-            {windKts !== null && (
-              <>
-                {" · "}
-                {compass ? `${compass} ` : ""}
-                {windKts} kts
-              </>
-            )}
           </p>
           <p className="opacity-70 mt-1">
             live from NOAA{observedLabel ? ` · ${observedLabel} PT` : ""}

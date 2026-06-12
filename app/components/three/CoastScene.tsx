@@ -28,7 +28,7 @@ installHeightFog();
 // the sun disc, glitter path and bloom are actually reachable from the rails.
 // Compass-bent north-of-west by artistic license — the same compression
 // license as the geography. Locked golden hour.
-const SUN_DIR: [number, number, number] = [-0.2, 0.02, -0.98];
+const SUN_DIR: [number, number, number] = [0.37, 0.02, -0.93];
 
 /** Calls onReady after the first real frames have been presented. */
 function ReadySignal({ onReady }: { onReady: () => void }) {
@@ -67,7 +67,7 @@ export default function CoastScene({
     <Canvas
       eventSource={eventSource as RefObject<HTMLElement>}
       eventPrefix="client"
-      camera={{ position: [-5.6, 7.2, 13.2], fov: 50, near: 0.1, far: 1400 }}
+      camera={{ position: [-11.0, 8.0, 7.0], fov: 50, near: 0.1, far: 1400 }}
       dpr={[1, 1.75]}
       gl={{ antialias: true }}
       onCreated={(state) => {
@@ -79,7 +79,7 @@ export default function CoastScene({
           (installHeightFog) supply the actual formula + constants */}
       <fogExp2 attach="fog" args={[TOKENS.fog, FOG.DENSITY]} />
       <hemisphereLight args={["#8d7aa8", "#6b5238", 1.05]} />
-      <directionalLight position={[-13, 2, -62]} intensity={2.4} color={TOKENS.sunGlow} />
+      <directionalLight position={[23, 2, -58]} intensity={2.4} color={TOKENS.sunGlow} />
       <SkyDome sunDir={SUN_DIR} />
       <Clouds />
       <Birds />

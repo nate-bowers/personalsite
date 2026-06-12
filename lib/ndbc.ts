@@ -12,10 +12,6 @@ export interface Conditions {
   waveHeightFt: number | null;
   /** Dominant wave period, seconds (DPD). */
   periodS: number | null;
-  /** Wind speed, knots (WSPD, converted from m/s). */
-  windKts: number | null;
-  /** Wind direction, degrees true (WDIR). */
-  windDir: number | null;
   /** ISO-8601 observation time, or null if unparseable. */
   observedAt: string | null;
   source: ConditionsSource;
@@ -26,14 +22,11 @@ export const DEFAULT_CONDITIONS: Conditions = {
   stationId: "—",
   waveHeightFt: 3,
   periodS: 12,
-  windKts: 8,
-  windDir: 300,
   observedAt: null,
   source: "default",
 };
 
 const METRES_TO_FEET = 3.28084;
-const MPS_TO_KNOTS = 1.94384;
 
 /** A field is missing when it is absent or NDBC's "MM" sentinel. */
 function num(value: string | undefined): number | null {
@@ -66,8 +59,6 @@ export function parseNdbc(raw: string, stationId: string, source: ConditionsSour
   const cols = headerLine.replace(/^#/, "").trim().split(/\s+/);
   const idx = (name: string) => cols.indexOf(name);
 
-  const iWDIR = idx("WDIR");
-  const iWSPD = idx("WSPD");
   const iWVHT = idx("WVHT");
   const iDPD = idx("DPD");
   const iYY = idx("YY") === -1 ? idx("#YY") : idx("YY");
@@ -87,8 +78,6 @@ export function parseNdbc(raw: string, stationId: string, source: ConditionsSour
 
   const waveM = num(f[iWVHT]);
   const period = num(f[iDPD]);
-  const windMps = num(f[iWSPD]);
-  const windDir = num(f[iWDIR]);
 
   let observedAt: string | null = null;
   const yy = num(f[iYY]);
@@ -107,20 +96,8 @@ export function parseNdbc(raw: string, stationId: string, source: ConditionsSour
     stationId,
     waveHeightFt: round(waveM === null ? null : waveM * METRES_TO_FEET),
     periodS: round(period),
-    windKts: round(windMps === null ? null : windMps * MPS_TO_KNOTS),
-    windDir,
     observedAt,
     source,
   };
 }
 
-const COMPASS = [
-  "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
-];
-
-/** Degrees (0-360) to a 16-point compass label. */
-export function degToCompass(deg: number | null): string | null {
-  if (deg === null) return null;
-  return COMPASS[Math.round((((deg % 360) + 360) % 360) / 22.5) % 16];
-}

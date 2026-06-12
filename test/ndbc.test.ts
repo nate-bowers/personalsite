@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { parseNdbc, degToCompass } from "@/lib/ndbc";
+import { parseNdbc } from "@/lib/ndbc";
 import { getConditions } from "@/lib/conditions";
 
 const fixture = (name: string) =>
@@ -14,9 +14,6 @@ describe("parseNdbc", () => {
     // 1.4 m -> 4.6 ft
     expect(c!.waveHeightFt).toBe(4.6);
     expect(c!.periodS).toBe(13);
-    // 5.0 m/s -> 9.7 kts
-    expect(c!.windKts).toBe(9.7);
-    expect(c!.windDir).toBe(320);
     expect(c!.stationId).toBe("46012");
     expect(c!.source).toBe("live");
     // newest row is 2024-06-11 18:50 UTC
@@ -34,8 +31,6 @@ describe("parseNdbc", () => {
     expect(c).not.toBeNull();
     expect(c!.waveHeightFt).toBeNull();
     expect(c!.periodS).toBeNull();
-    expect(c!.windKts).toBeNull();
-    expect(c!.windDir).toBeNull();
     // timestamp is still present even when measurements are missing
     expect(c!.observedAt).toBe("2024-06-11T19:50:00.000Z");
   });
@@ -46,21 +41,11 @@ describe("parseNdbc", () => {
     // 1.1 m -> 3.6 ft, present even though DPD is MM
     expect(c!.waveHeightFt).toBe(3.6);
     expect(c!.periodS).toBeNull();
-    expect(c!.windKts).toBe(11.7);
   });
 
   it("returns null for malformed / non-data content", () => {
     expect(parseNdbc(fixture("malformed.txt"), "46042", "fallback")).toBeNull();
     expect(parseNdbc("", "46012", "live")).toBeNull();
-  });
-});
-
-describe("degToCompass", () => {
-  it("maps degrees to 16-point compass labels", () => {
-    expect(degToCompass(0)).toBe("N");
-    expect(degToCompass(90)).toBe("E");
-    expect(degToCompass(315)).toBe("NW");
-    expect(degToCompass(null)).toBeNull();
   });
 });
 

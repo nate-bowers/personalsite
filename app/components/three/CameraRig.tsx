@@ -15,8 +15,8 @@ import type { Anchor } from "@/lib/terrain";
  * eased path to a low shot — buoy lower-third, coast behind. Retargeting
  * mid-flight is automatic because we always lerp toward the current target.
  */
-const HOME_POS = new THREE.Vector3(-5.6, 7.2, 13.2);
-const HOME_LOOK = new THREE.Vector3(1.6, 0.45, -3.2);
+const HOME_POS = new THREE.Vector3(-11.0, 8.0, 7.0);
+const HOME_LOOK = new THREE.Vector3(2.2, 2.0, -1.8);
 
 export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
   const { camera } = useThree();
