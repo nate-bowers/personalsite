@@ -52,12 +52,13 @@ const ANCHORS = [
   { slug: "contact", label: "Contact", place: "BIG SUR", lat: 36.27, lng: -121.807 },
 ];
 
-// Faint place names rendered ON the terrain (spec §2): positioned just inland.
+// Faint place names rendered ON the terrain (spec §2): positioned far enough
+// inland that none projects under a buoy label pill from the default camera.
 const PLACES = [
-  { name: "STINSON", lat: 37.906, lng: -122.58 },
-  { name: "MAVERICKS", lat: 37.5, lng: -122.43 },
-  { name: "SANTA CRUZ", lat: 36.99, lng: -121.99 },
-  { name: "BIG SUR", lat: 36.29, lng: -121.72 },
+  { name: "STINSON", lat: 37.935, lng: -122.5 },
+  { name: "MAVERICKS", lat: 37.52, lng: -122.33 },
+  { name: "SANTA CRUZ", lat: 37.02, lng: -121.9 },
+  { name: "BIG SUR", lat: 36.33, lng: -121.64 },
 ];
 
 const TILE_BASE = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium";

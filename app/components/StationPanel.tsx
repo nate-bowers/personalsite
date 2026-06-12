@@ -105,7 +105,7 @@ export default function StationPanel({ content }: { content: StationContent }) {
         tabIndex={-1}
         className={
           side
-            ? "station-panel fixed inset-y-0 right-0 z-30 flex w-full max-w-[480px] flex-col outline-none md:w-[42%]"
+            ? "station-panel fixed inset-y-0 right-0 z-30 flex w-full max-w-[640px] flex-col outline-none md:w-[40%]"
             : "station-panel fixed inset-x-0 bottom-0 z-30 flex h-dvh flex-col outline-none md:h-[78vh] md:rounded-t-2xl"
         }
         style={{ background: "var(--panel-bg)", color: "var(--panel-ink)" }}

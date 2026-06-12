@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Conditions } from "@/lib/ndbc";
 import { oceanParams } from "@/lib/ocean-map";
-import { gerstnerGlsl } from "@/lib/gerstner";
+import { gerstnerGlsl, DISP_FADE } from "@/lib/gerstner";
 import type { OpennessField } from "@/lib/openness";
 import { TOKENS, HEIGHT_FOG_GLSL } from "./atmosphere";
 
@@ -23,8 +23,7 @@ import { TOKENS, HEIGHT_FOG_GLSL } from "./atmosphere";
  */
 
 const SIZE = 320; // plane size — fully inside the 500-radius sky dome
-const SEGS = 220; // ~80k tris; fragment ripples carry the fine detail
-const DISP_FAR = 30; // world units beyond which Gerstner displacement is gone
+const SEGS = 180; // ~65k tris; fragment ripples carry the fine detail
 
 const vertexShader = /* glsl */ `
   uniform float uTime;
@@ -41,7 +40,8 @@ const vertexShader = /* glsl */ `
     vec2 p = position.xy; // plane-local: p.x = world x, p.y = -world z
 
     // amplitude = live conditions * local exposure, faded with camera distance
-    float distFade = 1.0 - smoothstep(${(DISP_FAR * 0.55).toFixed(1)}, ${DISP_FAR.toFixed(1)}, distance(uCamPos.xz, vec2(p.x, -p.y)));
+    // (DISP_FADE shared with the CPU twin so props ride the rendered surface)
+    float distFade = 1.0 - smoothstep(${DISP_FADE.NEAR.toFixed(1)}, ${DISP_FADE.FAR.toFixed(1)}, distance(uCamPos.xz, vec2(p.x, -p.y)));
     float A0 = uAmp * aOpen * distFade;
 
     float height = 0.0;
@@ -74,8 +74,15 @@ const fragmentShader = /* glsl */ `
   ${HEIGHT_FOG_GLSL}
 
   void main() {
-    // moving ripple detail (shading only), faded where the water is sheltered
-    float ripple = vOpen * 0.8 + 0.2;
+    float dist = length(cameraPosition - vWorldPos);
+
+    // moving ripple detail (shading only): faded where the water is sheltered
+    // AND with distance (matching the vertex displacement fade) so the
+    // mid-distance sea settles into the far violet instead of moiré stripes.
+    // A floor keeps far normals from going mirror-flat — a mirror sea turns
+    // the sun into a razor line instead of a soft path.
+    float rippleDist = mix(0.3, 1.0, 1.0 - smoothstep(14.0, 34.0, dist));
+    float ripple = (vOpen * 0.8 + 0.2) * rippleDist;
     vec2 q = vWorldPos.xz;
     float rx = (cos(q.x * 2.6 + uTime * 1.3) * 0.12 + cos(q.x * 6.1 - q.y * 1.4 + uTime * 2.1) * 0.07) * ripple;
     float rz = (sin(q.y * 2.4 - uTime * 1.05) * 0.12 + sin(q.y * 6.4 + q.x * 1.1 - uTime * 1.8) * 0.07) * ripple;
@@ -93,15 +100,15 @@ const fragmentShader = /* glsl */ `
     float reflAmt = pow(1.0 - max(dot(N, V), 0.0), 4.0);
     vec3 color = mix(base, sky, reflAmt * 0.18);
 
-    // sun glitter — elongated golden path on the LIVE waves only. Past the
-    // displacement fade the sea is mirror-flat and a mirror turns the sun into
-    // a razor-thin vertical line (the "spike"), so glitter dies with the waves.
-    float glint = pow(max(dot(R, S), 0.0), 34.0);
-    float glow = pow(max(dot(R, S), 0.0), 14.0);
-    float pathFade = 1.0 - smoothstep(10.0, 26.0, length(cameraPosition - vWorldPos));
-    color += uGlitter * (glint * 1.2 + glow * 0.25) * pathFade;
+    // sun glitter — the elongated golden path stretching from the horizon
+    // toward the camera along the sun azimuth (DESIGN-PHASE2.md §1/§4),
+    // softened (not killed) with distance; the ripple floor above keeps the
+    // far path scattered instead of a razor mirror line.
+    float glint = pow(max(dot(R, S), 0.0), 52.0);
+    float glow = pow(max(dot(R, S), 0.0), 24.0);
+    float pathFade = max(0.22, 1.0 - smoothstep(12.0, 42.0, dist));
+    color += uGlitter * (glint * 1.1 + glow * 0.16) * pathFade;
 
-    float dist = length(cameraPosition - vWorldPos);
     color = applyHeightFog(color, dist, vWorldPos.y);
 
     gl_FragColor = vec4(color, 1.0);

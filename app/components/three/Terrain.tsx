@@ -19,7 +19,7 @@ import { TOKENS, HEIGHT_FOG_GLSL } from "./atmosphere";
  * falling toward --land-shade violet, warm rim light on the ridgelines.
  */
 
-const SEG = 280;
+const SEG = 240;
 const CORE = 0.7; // fraction of grid parameter covering the heightmap bbox
 const EDGE_X = 58; // absolute skirt extent (scene units) — past full-fog from every camera
 const EDGE_Z = 62;
@@ -106,12 +106,12 @@ const fragmentShader = /* glsl */ `
     // golden-hour grade: lit faces warm toward --land-lit, shaded faces fall
     // toward --land-shade violet (the painterly two-sided Firewatch read)
     vec3 lit = vColor * vec3(1.32, 1.04, 0.74) * (0.55 + 0.85 * lambert);
-    vec3 shade = mix(vColor, uLandShade, 0.55) * 0.52;
+    vec3 shade = mix(vColor, uLandShade, 0.5) * 0.62;
     vec3 col = mix(shade, lit, smoothstep(0.0, 0.5, lambert));
 
     // warm rim light on ridgelines facing the low sun
     float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0) * lambert;
-    col += uSunGlow * rim * 0.22;
+    col += uSunGlow * rim * 0.4;
 
     float dist = length(cameraPosition - vWorldPos);
     col = applyHeightFog(col, dist, vWorldPos.y);

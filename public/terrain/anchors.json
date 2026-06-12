@@ -59,27 +59,27 @@
   "places": [
     {
       "name": "STINSON",
-      "x": -1.588,
-      "z": -5.957,
-      "elevMeters": 209
+      "x": -0.882,
+      "z": -6.205,
+      "elevMeters": -5
     },
     {
       "name": "MAVERICKS",
-      "x": -0.265,
-      "z": -2.482,
-      "elevMeters": 179
+      "x": 0.618,
+      "z": -2.653,
+      "elevMeters": 128
     },
     {
       "name": "SANTA CRUZ",
-      "x": 3.618,
-      "z": 1.883,
-      "elevMeters": 35
+      "x": 4.412,
+      "z": 1.626,
+      "elevMeters": 166
     },
     {
       "name": "BIG SUR",
-      "x": 6,
-      "z": 7.874,
-      "elevMeters": 917
+      "x": 6.706,
+      "z": 7.532,
+      "elevMeters": 908
     }
   ]
 }

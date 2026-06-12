@@ -22,10 +22,12 @@ import CameraRig from "./CameraRig";
 // Replace three's fog with the shared height fog before any material compiles.
 installHeightFog();
 
-// Direction TO the sun: low in the WNW over the water (the real NorCal summer
-// sunset azimuth) — in frame-left of the NE-looking default shot, so the sun
-// disc and its glitter path are visible. Locked golden hour.
-const SUN_DIR: [number, number, number] = [-0.85, 0.14, -0.45];
+// Direction TO the sun: low over the water in frame-left of the NE-looking
+// default shot (~34° left of the view axis, inside the 39.7° half-FOV), so
+// the sun disc, glitter path and bloom are actually reachable from the rails.
+// Compass-bent north-of-west by artistic license — the same compression
+// license as the geography. Locked golden hour.
+const SUN_DIR: [number, number, number] = [-0.2, 0.02, -0.98];
 
 /** Calls onReady after the first real frames have been presented. */
 function ReadySignal({ onReady }: { onReady: () => void }) {
@@ -71,8 +73,8 @@ export default function CoastScene({
       {/* fogExp2 turns USE_FOG on for standard materials; the patched chunks
           (installHeightFog) supply the actual formula + constants */}
       <fogExp2 attach="fog" args={[TOKENS.fog, FOG.DENSITY]} />
-      <hemisphereLight args={["#7a6a9e", "#5a4430", 0.85]} />
-      <directionalLight position={[-55, 10, -29]} intensity={2.4} color={TOKENS.sunGlow} />
+      <hemisphereLight args={["#8d7aa8", "#6b5238", 1.05]} />
+      <directionalLight position={[-13, 2, -62]} intensity={2.4} color={TOKENS.sunGlow} />
       <SkyDome sunDir={SUN_DIR} />
       <Clouds />
       <Birds />

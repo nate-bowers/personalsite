@@ -17,24 +17,41 @@ import CoastScene from "./CoastScene";
  * so R3F pointer events (buoy clicks, hover) fire even though drei <Html>
  * labels are portaled over the canvas.
  */
-export default function CoastBackground({ conditions }: { conditions: Conditions }) {
+export default function CoastBackground({
+  conditions,
+  onUnavailable,
+}: {
+  conditions: Conditions;
+  onUnavailable?: () => void;
+}) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<TerrainData | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    loadTerrain()
-      .then((d) => {
-        if (alive) setData(d);
-      })
-      .catch(() => {
-        /* terrain unavailable -> stays on the gradient */
-      });
+    let retried = false;
+    const attempt = () =>
+      loadTerrain()
+        .then((d) => {
+          if (alive) setData(d);
+        })
+        .catch(() => {
+          // one retry, then hand the stage back honestly (2D fallback)
+          // rather than stranding the visitor on "establishing conditions..."
+          if (!alive) return;
+          if (!retried) {
+            retried = true;
+            setTimeout(attempt, 2500);
+          } else {
+            onUnavailable?.();
+          }
+        });
+    attempt();
     return () => {
       alive = false;
     };
-  }, []);
+  }, [onUnavailable]);
 
   return (
     <div ref={wrapperRef} className="fixed inset-0 z-0">

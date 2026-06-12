@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { useRouter } from "next/navigation";
@@ -9,7 +9,7 @@ import type { Conditions } from "@/lib/ndbc";
 import type { TerrainData, Anchor } from "@/lib/terrain";
 import type { OpennessField } from "@/lib/openness";
 import { oceanParams } from "@/lib/ocean-map";
-import { waterSurface } from "@/lib/gerstner";
+import { waterSurface, dispFade } from "@/lib/gerstner";
 import { TOKENS } from "./atmosphere";
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -101,6 +101,7 @@ function OneBuoy({
 }) {
   const router = useRouter();
   const group = useRef<THREE.Group>(null);
+  const labelRef = useRef<HTMLButtonElement>(null);
   const params = oceanParams(conditions);
   const targetQ = useRef(new THREE.Quaternion());
   const normal = useRef(new THREE.Vector3());
@@ -108,12 +109,28 @@ function OneBuoy({
   useFrame((state) => {
     const g = group.current;
     if (!g) return;
-    const s = waterSurface(anchor.x, anchor.z, state.clock.elapsedTime, params, open);
+    // identical amplitude to the rendered surface: local exposure × the same
+    // camera-distance fade the vertex shader applies
+    const cam = state.camera.position;
+    const fade = dispFade(Math.hypot(cam.x - anchor.x, cam.z - anchor.z));
+    const s = waterSurface(anchor.x, anchor.z, state.clock.elapsedTime, params, open * fade);
     g.position.set(anchor.x, s.height, anchor.z);
     normal.current.set(s.normal[0], s.normal[1], s.normal[2]);
     targetQ.current.setFromUnitVectors(UP, normal.current);
     g.quaternion.slerp(targetQ.current, 0.16); // heave + pitch/roll with the wave
   });
+
+  // clarity rule: focus returns to the buoy that opened the panel (3D renderer)
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("lineup-return") === anchor.slug) {
+        sessionStorage.removeItem("lineup-return");
+        labelRef.current?.focus();
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [anchor.slug]);
 
   const openPanel = () => router.push(`/${anchor.slug}`);
 
@@ -131,14 +148,17 @@ function OneBuoy({
       onPointerOut={() => (document.body.style.cursor = "")}
     >
       <BuoyModel />
-      {/* generous invisible raycast target so the whole buoy is easy to click/tap */}
+      {/* generous invisible raycast target so the whole buoy is easy to click/tap
+          (visible={false} on the material skips the render pass entirely while
+          the geometry stays raycastable) */}
       <mesh position={[0, 0.2, 0]}>
         <sphereGeometry args={[0.85, 12, 10]} />
-        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        <meshBasicMaterial visible={false} />
       </mesh>
       {/* always-visible, keyboard-focusable label (billboards toward the camera) */}
       <Html position={[0, 0.78, 0]} center zIndexRange={[10, 6]}>
         <button
+          ref={labelRef}
           type="button"
           onClick={openPanel}
           aria-label={`Open ${anchor.label} — station ${anchor.place}`}
@@ -164,8 +184,10 @@ export default function Buoys({
   conditions: Conditions;
   openness: OpennessField;
 }) {
+  // raw field — the SAME value the water mesh bakes into its aOpen attribute,
+  // so a buoy can never out-bob the surface it floats on
   const opens = useMemo(
-    () => terrain.anchors.map((a) => Math.max(0.45, openness.sample(a.x, a.z))),
+    () => terrain.anchors.map((a) => openness.sample(a.x, a.z)),
     [terrain, openness],
   );
   return (

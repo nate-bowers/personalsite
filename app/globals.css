@@ -77,6 +77,12 @@ body {
 /* Readable prose inside panels (no typography plugin). */
 .station-prose { font-size: 1.0625rem; line-height: 1.6; }
 .station-prose > * + * { margin-top: 0.9em; }
+.buoy3d-label:hover,
+.buoy3d-label:focus-visible {
+  background: var(--panel-bg) !important;
+  color: var(--accent) !important;
+}
+
 .station-prose h2 { font-family: var(--font-display), Georgia, serif; font-size: 1.55rem; line-height: 1.15; }
 .station-prose h3 { font-weight: 600; font-size: 1.1rem; }
 .station-prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }

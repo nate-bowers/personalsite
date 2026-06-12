@@ -30,7 +30,7 @@ const fragmentShader = /* glsl */ `
     vec3 D = normalize(vDir);
     // orange holds the horizon band; violet takes over with altitude
     float t = clamp(D.y, 0.0, 1.0);
-    vec3 col = mix(uLow, uZenith, pow(t, 0.62));
+    vec3 col = mix(uLow, uZenith, pow(t, 0.45));
 
     float s = max(dot(D, normalize(uSunDir)), 0.0);
     col += uSunGlow * pow(s, 18.0) * 0.7;            // wide warm halo

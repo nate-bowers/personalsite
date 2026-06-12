@@ -16,7 +16,7 @@ import type { Anchor } from "@/lib/terrain";
  * mid-flight is automatic because we always lerp toward the current target.
  */
 const HOME_POS = new THREE.Vector3(-5.6, 7.2, 13.2);
-const HOME_LOOK = new THREE.Vector3(1.6, -0.2, -3.2);
+const HOME_LOOK = new THREE.Vector3(1.6, 0.45, -3.2);
 
 export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
   const { camera } = useThree();
@@ -28,12 +28,13 @@ export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
   const desiredLook = useRef(new THREE.Vector3());
   const look = useRef(HOME_LOOK.clone());
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
     if (anchor) {
-      // low shot: offshore of the buoy, looking past it toward the coast
+      // low shot: offshore of the buoy, looking past it toward the coast,
+      // buoy settling into the lower third of the frame
       desiredPos.current.set(anchor.x - 1.55, 0.6, anchor.z + 1.3);
-      desiredLook.current.set(anchor.x + 0.5, 0.1, anchor.z - 0.45);
+      desiredLook.current.set(anchor.x + 0.5, 0.28, anchor.z - 0.45);
     } else {
       desiredPos.current.set(
         HOME_POS.x + Math.sin(t * 0.07) * 0.5,
@@ -42,9 +43,11 @@ export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
       );
       desiredLook.current.copy(HOME_LOOK);
     }
-    // ~1.8s ease feel; smooth and interruptible
-    camera.position.lerp(desiredPos.current, 0.045);
-    look.current.lerp(desiredLook.current, 0.045);
+    // ~1.8s ease feel; smooth, interruptible, and frame-rate independent
+    // (0.045/frame at 60fps, normalized to wall time for 120Hz/30Hz displays)
+    const k = 1 - Math.pow(1 - 0.045, delta * 60);
+    camera.position.lerp(desiredPos.current, k);
+    look.current.lerp(desiredLook.current, k);
     camera.lookAt(look.current);
   });
 

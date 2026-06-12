@@ -54,7 +54,11 @@ export default function RendererStage({
   conditions: Conditions;
   children: React.ReactNode;
 }) {
-  const mode = useSyncExternalStore<RenderMode>(subscribe, clientMode, () => "loading");
+  const detected = useSyncExternalStore<RenderMode>(subscribe, clientMode, () => "loading");
+  // honest degradation: if the terrain assets can't be fetched, the 3D path
+  // hands the stage to the 2D ocean instead of loading forever
+  const [terrainFailed, setTerrainFailed] = useState(false);
+  const mode: RenderMode = terrainFailed && detected === "3d" ? "2d" : detected;
 
   // "Take the controls" can override the live data feeding the ocean.
   const [override, setOverride] = useState<Conditions | null>(null);
@@ -75,7 +79,9 @@ export default function RendererStage({
       {mode === "2d" && <Ocean conditions={effective} />}
       {/* z-0 wrapper (owned by CoastBackground) so the canvas receives pointer events;
           the chrome (nav z-15, header z-20, panel z-30) stays above it. */}
-      {mode === "3d" && <CoastBackground conditions={effective} />}
+      {mode === "3d" && (
+        <CoastBackground conditions={effective} onUnavailable={() => setTerrainFailed(true)} />
+      )}
       {mode === "loading" && <Establishing />}
       {children}
       {mode !== "loading" && <Controls live={conditions} override={override} setOverride={setOverride} />}

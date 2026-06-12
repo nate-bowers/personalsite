@@ -64,6 +64,11 @@ export function loadTerrain(): Promise<TerrainData> {
         heights,
       } as TerrainData;
     })();
+    // a transient fetch failure must not strand the page on the loading
+    // state forever — clear the cache so a remount can retry
+    cache.catch(() => {
+      cache = null;
+    });
   }
   return cache;
 }

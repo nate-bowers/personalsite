@@ -63,6 +63,18 @@ export const gerstnerGlsl: string = WAVES.map((w, i) => {
     }`;
 }).join("\n");
 
+/**
+ * Camera-distance displacement fade — the far sea renders flat so wave
+ * silhouettes never reach the horizon. The water shader AND the CPU twin both
+ * apply this, so props ride exactly the surface that is drawn under them.
+ */
+export const DISP_FADE = { NEAR: 16.5, FAR: 30 } as const;
+
+export function dispFade(distXZ: number): number {
+  const t = Math.max(0, Math.min(1, (distXZ - DISP_FADE.NEAR) / (DISP_FADE.FAR - DISP_FADE.NEAR)));
+  return 1 - t * t * (3 - 2 * t);
+}
+
 export interface Surface {
   /** water height (world Y) at (wx, wz) */
   height: number;

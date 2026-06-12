@@ -7,7 +7,7 @@ import { lngLatToScene, type TerrainData } from "@/lib/terrain";
 import type { Conditions } from "@/lib/ndbc";
 import type { OpennessField } from "@/lib/openness";
 import { oceanParams } from "@/lib/ocean-map";
-import { waterSurface } from "@/lib/gerstner";
+import { waterSurface, dispFade } from "@/lib/gerstner";
 
 /** A little ferry crossing the Golden Gate strait, riding the same damped
  * Gerstner surface as the water mesh (calm inside the gate, swell outside). */
@@ -34,7 +34,9 @@ export default function Ferry({
     const phase = (t % 30) / 30;
     const z = base.gz - 0.55 + phase * 1.1;
     const x = base.gx + Math.sin(phase * Math.PI) * 0.2;
-    const s = waterSurface(x, z, t, params, openness.sample(x, z));
+    const cam = state.camera.position;
+    const fade = dispFade(Math.hypot(cam.x - x, cam.z - z));
+    const s = waterSurface(x, z, t, params, openness.sample(x, z) * fade);
     g.position.set(x, s.height + 0.012, z);
     g.rotation.set(s.normal[2] * 0.4, 0, -s.normal[0] * 0.4);
   });
