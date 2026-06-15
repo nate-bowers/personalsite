@@ -17,14 +17,50 @@ import {
 // against the pale, faded ridges. Pre-fading the instance color toward the warm
 // haze (referenced from the near-fixed home camera) makes distant trees
 // genuinely dissolve into the atmosphere. Stacks under the real shader fog.
-const HAZE = new THREE.Color(TOKENS.fog);
+// Distance + off-axis dissolve, evaluated from the default home shot (kept in
+// sync with CameraRig HOME_POS / HOME_LOOK). Returns 0 (crisp foreground) .. 1
+// (gone). HOME_X/HOME_Z are the camera's ground position; VAX/VAZ the horizontal
+// view axis. The off-axis term rides an earlier, gentler distance ramp, so the
+// top-left/right corners drop out before the on-axis center.
 const HOME_X = -11;
 const HOME_Z = 7;
-function hazeTint(out: THREE.Color, x: number, z: number) {
-  const d = Math.hypot(x - HOME_X, z - HOME_Z);
-  const t = THREE.MathUtils.clamp((d - 13) / 16, 0, 1); // 13 near .. 29 far
-  out.lerp(HAZE, t * t * 0.82);
+const VIEW_X = 2.2 - HOME_X; // HOME_LOOK.x − HOME_POS.x
+const VIEW_Z = -1.8 - HOME_Z; // HOME_LOOK.z − HOME_POS.z
+const VIEW_LEN = Math.hypot(VIEW_X, VIEW_Z);
+const VAX = VIEW_X / VIEW_LEN;
+const VAZ = VIEW_Z / VIEW_LEN;
+function dissolve(x: number, z: number, elev: number) {
+  const dx = x - HOME_X;
+  const dz = z - HOME_Z;
+  const d = Math.hypot(dx, dz);
+  // (1) plain distance: far trees go to haze.
+  const far = THREE.MathUtils.smoothstep(d, 12, 23);
+  // (2) RIDGE SILHOUETTE — the worst offenders. A tree high on a ridge rises
+  // above its local skyline into the pale, fog-washed far mountains, so it
+  // reads as a dark dot no matter the tint; a valley tree at the same distance
+  // has solid terrain behind it and sits fine. Past the immediate foreground,
+  // pale out by elevation. This is the term that finally clears the top corners.
+  const ridge =
+    THREE.MathUtils.smoothstep(elev, 150, 450) * THREE.MathUtils.smoothstep(d, 11, 15);
+  // (3) off-axis: the top-left/right corners pale a touch sooner.
+  const cos = d > 1e-3 ? (dx * VAX + dz * VAZ) / d : 1;
+  const ang = Math.acos(THREE.MathUtils.clamp(cos, -1, 1));
+  const corner =
+    THREE.MathUtils.smoothstep(ang, 0.18, 0.5) * THREE.MathUtils.smoothstep(d, 11, 17);
+  // any of the three can dissolve a tree independently
+  return 1 - (1 - far) * (1 - ridge) * (1 - corner);
 }
+
+const HAZE = new THREE.Color(TOKENS.fog);
+
+// A receding tree is tinted toward the haze: the distance fog + sun-glow wash
+// the far ridges nearly pale, so a tree silhouetted against them (the top-left/
+// right corners especially) has to go pale too or it reads as a dark dot on a
+// bright mountain. Past CULL the tree is so dissolved it's a near-pure
+// silhouette with no read of its own, so it is dropped entirely — the forest
+// thins to bare, hazy mountains at the far corners, which is what the eye
+// expects of deep atmospheric distance.
+const CULL = 0.92;
 
 // keep clearings around the landmarks so they read instantly
 const CLEARINGS: [number, number, number][] = [
@@ -121,11 +157,9 @@ function buildForest(data: TerrainData, calm: boolean) {
     if (inClearing(x, z)) continue;
 
     const e = 0.12;
-    const slope =
-      (Math.abs(elevationAtScene(data, x + e, z) - elevationAtScene(data, x - e, z)) +
-        Math.abs(elevationAtScene(data, x, z + e) - elevationAtScene(data, x, z - e))) /
-      (2 * e) /
-      900; // rough normalized gradient
+    const dEx = elevationAtScene(data, x + e, z) - elevationAtScene(data, x - e, z);
+    const dEz = elevationAtScene(data, x, z + e) - elevationAtScene(data, x, z - e);
+    const slope = (Math.abs(dEx) + Math.abs(dEz)) / (2 * e) / 900; // rough normalized gradient
 
     const nearOcean = openWaterAtScene(data, x - 0.25, z) > 0.15 || openWaterAtScene(data, x, z + 0.25) > 0.15;
     const marin = z < marinZ && !nearOcean;
@@ -140,8 +174,11 @@ function buildForest(data: TerrainData, calm: boolean) {
     if (nearOcean && elev < 40) p *= 0.25; // beaches stay open
     if (rng() > p) continue;
 
+    const amt = dissolve(x, z, elev);
+    if (amt >= CULL) continue; // far / high-ridge / off-axis: thin to bare mountains
+
     c.setHSL(0.31 + rng() * 0.07, 0.32 + rng() * 0.18, 0.16 + rng() * 0.12);
-    hazeTint(c, x, z);
+    c.lerp(HAZE, amt); // recede into the pale atmospheric backdrop
     conifers.push({
       pos: [x, elev * meta.yScale, z],
       scale: 0.55 + rng() * 0.8,
@@ -161,8 +198,10 @@ function buildForest(data: TerrainData, calm: boolean) {
     const coastal =
       openWaterAtScene(data, x - 0.18, z) > 0.25 || openWaterAtScene(data, x, z + 0.18) > 0.25;
     if (!coastal || rng() > 0.5) continue;
+    const amt = dissolve(x, z, elev);
+    if (amt >= CULL) continue;
     c.setHSL(0.34 + rng() * 0.04, 0.26 + rng() * 0.12, 0.14 + rng() * 0.08);
-    hazeTint(c, x, z);
+    c.lerp(HAZE, amt); // recede into the pale atmospheric backdrop
     cypress.push({
       pos: [x, elev * meta.yScale, z],
       scale: 0.6 + rng() * 0.7,
