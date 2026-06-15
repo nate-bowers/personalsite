@@ -109,13 +109,13 @@ export default function CoastScene({
       <Whale data={data} conditions={conditions} openness={openness} />
       <CameraRig anchors={data.anchors} />
       <ReadySignal onReady={onReady} />
-      {/* Bloom is the heaviest fragment cost; drop post-processing on the calm
-          (mobile / low-power) tier so phones stay smooth. */}
-      {!calm && (
-        <EffectComposer>
-          <Bloom intensity={0.5} luminanceThreshold={0.82} luminanceSmoothing={0.3} mipmapBlur />
-        </EffectComposer>
-      )}
+      {/* Bloom IS the golden-hour glow — it diffuses the bright sun/sky into soft
+          haze; without it the orange sky reads as a hard red fireball. So it runs
+          on EVERY tier. The calm savings come from DPR + geometry, not from
+          dropping post-processing (mipmapBlur is cheap at the lower DPR). */}
+      <EffectComposer>
+        <Bloom intensity={0.5} luminanceThreshold={0.82} luminanceSmoothing={0.3} mipmapBlur />
+      </EffectComposer>
     </Canvas>
   );
 }
