@@ -1,6 +1,7 @@
 "use client";
 
 import { Html } from "@react-three/drei";
+import { useThree } from "@react-three/fiber";
 import { terrainYAtScene, type TerrainData } from "@/lib/terrain";
 
 /**
@@ -10,6 +11,10 @@ import { terrainYAtScene, type TerrainData } from "@/lib/terrain";
  * competing with the buoy labels.
  */
 export default function PlaceNames({ data }: { data: TerrainData }) {
+  // On compact (portrait/mobile) the pulled-back framing crowds the buoy labels
+  // into a thin band; the terrain place-names would overlap them, so drop them.
+  const compact = useThree((s) => s.size.width < 768);
+  if (compact) return null;
   return (
     <group>
       {data.places.map((p) => (

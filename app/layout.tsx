@@ -75,13 +75,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <BuoyField />
 
           {/* Persistent header: name top-left, instrument readout top-right. */}
-          <header className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-4 p-5 sm:p-7">
-            <div>
+          <header className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-4 sm:gap-4 sm:p-7">
+            <div className="min-w-0">
               <h1
                 className="font-display leading-none"
                 style={{
                   color: "var(--ink)",
-                  fontSize: "clamp(2.25rem, 7vw, 5rem)",
+                  fontSize: "clamp(2rem, 7vw, 5rem)",
                   textShadow: "0 2px 18px rgba(22,42,62,0.5)",
                 }}
               >
@@ -89,7 +89,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               </h1>
               <FirstVisitHint />
             </div>
-            <div className="shrink-0 text-right">
+            <div className="max-w-[58%] text-right sm:max-w-none sm:shrink-0">
               <Readout conditions={conditions} />
             </div>
           </header>

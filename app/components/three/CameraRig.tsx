@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import { usePathname } from "next/navigation";
 import * as THREE from "three";
@@ -17,6 +17,18 @@ import type { Anchor } from "@/lib/terrain";
  */
 const HOME_POS = new THREE.Vector3(-11.0, 8.0, 7.0);
 const HOME_LOOK = new THREE.Vector3(2.2, 2.0, -1.8);
+// Portrait phones get a far narrower HORIZONTAL field of view, so the wide buoy
+// spread (Stinson … Big Sur) falls off the sides. Pull the home camera back
+// along its view axis so the whole coast fits the tall frame, and widen the FOV.
+const HOME_POS_PORTRAIT = HOME_LOOK.clone().add(
+  HOME_POS.clone().sub(HOME_LOOK).multiplyScalar(2.0),
+);
+// Portrait re-aims toward the centre of the buoy spread so all five fit the
+// narrow frame with margin for their labels (verified by projecting at 390×844:
+// maxX ≈ 0.80). Pull-back + a wide FOV are the minimum that fit the spread.
+const HOME_LOOK_PORTRAIT = new THREE.Vector3(1.0, 1.0, 1.0);
+const FOV_LANDSCAPE = 50;
+const FOV_PORTRAIT = 68;
 
 // Dev-only: ?debugcam=px,py,pz,tx,ty,tz pins the camera for the visual
 // iteration loop (model close-ups). Never active in production builds.
@@ -30,11 +42,20 @@ function debugCam(): { pos: THREE.Vector3; look: THREE.Vector3 } | null {
 }
 
 export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
-  const { camera } = useThree();
+  const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
+  const portrait = size.height > size.width;
   const pathname = usePathname();
   const slug = pathname.replace(/^\//, "");
   const anchor = anchors.find((a) => a.slug === slug) ?? null;
   const dbg = useMemo(() => debugCam(), []);
+
+  // Widen the FOV on portrait so more of the coast fits the narrow frame.
+  useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    cam.fov = portrait ? FOV_PORTRAIT : FOV_LANDSCAPE;
+    cam.updateProjectionMatrix();
+  }, [camera, portrait]);
 
   const desiredPos = useRef(new THREE.Vector3());
   const desiredLook = useRef(new THREE.Vector3());
@@ -53,12 +74,13 @@ export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
       desiredPos.current.set(anchor.x - 1.55, 0.6, anchor.z + 1.3);
       desiredLook.current.set(anchor.x + 0.5, 0.28, anchor.z - 0.45);
     } else {
+      const home = portrait ? HOME_POS_PORTRAIT : HOME_POS;
       desiredPos.current.set(
-        HOME_POS.x + Math.sin(t * 0.07) * 0.5,
-        HOME_POS.y + Math.cos(t * 0.05) * 0.25,
-        HOME_POS.z + Math.sin(t * 0.04) * 0.35,
+        home.x + Math.sin(t * 0.07) * 0.5,
+        home.y + Math.cos(t * 0.05) * 0.25,
+        home.z + Math.sin(t * 0.04) * 0.35,
       );
-      desiredLook.current.copy(HOME_LOOK);
+      desiredLook.current.copy(portrait ? HOME_LOOK_PORTRAIT : HOME_LOOK);
     }
     // ~1.8s ease feel; smooth, interruptible, and frame-rate independent
     // (0.045/frame at 60fps, normalized to wall time for 120Hz/30Hz displays)

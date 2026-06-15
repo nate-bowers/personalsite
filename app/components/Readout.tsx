@@ -29,7 +29,7 @@ export default function Readout({ conditions }: { conditions: Conditions }) {
 
   return (
     <aside
-      className="font-mono text-[13px] leading-tight"
+      className="font-mono text-[11px] leading-tight sm:text-[13px]"
       style={{ color: "var(--ink)", textShadow: "0 1px 12px rgba(22,42,62,0.55)" }}
       aria-label="Live ocean conditions"
     >
