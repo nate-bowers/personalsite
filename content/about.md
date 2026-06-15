@@ -9,9 +9,6 @@ surfCam:
   href: "https://www.surfline.com/surf-report/stinson-beach/5842041f4e65fad6a7708807"
 ---
 
-<!-- TODO(nate): replace this placeholder with your own ~150 words. Keep it plain;
-     the surf-report voice belongs in the report line above, not here. -->
-
 I grew up in the **Bay Area** and now study **applied math and economics at Vanderbilt**.
 The throughline is using data to answer questions I actually care about — markets,
 oceans, and the systems underneath both.
