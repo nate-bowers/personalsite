@@ -20,7 +20,7 @@ type V3 = [number, number, number];
 const SPOTS = {
   hoover: { lng: -122.195, lat: 37.405 },
   campanile: { lng: -122.2578, lat: 37.8721 },
-  levis: { lng: -121.98, lat: 37.4 }, // flat (slope-0) South Bay flats
+  levis: { lng: -122.07, lat: 37.4 }, // west onto the open flats, toward the camera
 };
 
 export default function Landmarks({ data }: { data: TerrainData }) {
