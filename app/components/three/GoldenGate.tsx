@@ -186,7 +186,7 @@ export default function GoldenGate({ data }: { data: TerrainData }) {
   const geo = useMemo(() => buildBridge(), []);
 
   return (
-    <group position={pos} scale={0.55}>
+    <group position={pos} scale={1.1}>
       <mesh geometry={geo.towers}>
         <meshStandardMaterial color={ORANGE} roughness={0.55} emissive={ORANGE} emissiveIntensity={0.3} />
       </mesh>

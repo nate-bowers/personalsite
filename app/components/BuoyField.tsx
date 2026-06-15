@@ -10,11 +10,11 @@ import { useRenderMode } from "./RendererStage";
  * viewport with no scrolling at every breakpoint (DESIGN.md clarity rule #1).
  */
 const BUOYS: (BuoyDef & { delay: number; left: string; top: string })[] = [
-  { slug: "about", label: "About", station: "STN 2004", delay: 0.0, left: "15%", top: "26%" },
+  { slug: "about", label: "About me", station: "STN 2004", delay: 0.0, left: "15%", top: "26%" },
   { slug: "projects", label: "Projects", station: "STN 46012", delay: 0.7, left: "43%", top: "12%" },
   { slug: "ask", label: "Ask Nate", station: "STN 0000", delay: 1.3, left: "70%", top: "26%" },
   { slug: "resume", label: "Resume", station: "STN 2028", delay: 0.4, left: "28%", top: "62%" },
-  { slug: "contact", label: "Contact", station: "STN 1", delay: 1.0, left: "62%", top: "66%" },
+  { slug: "contact", label: "Contact me", station: "STN 1", delay: 1.0, left: "62%", top: "66%" },
 ];
 
 export default function BuoyField() {

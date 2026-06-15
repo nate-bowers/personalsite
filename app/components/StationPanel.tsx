@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import type { ProjectCard, StationContent } from "@/lib/content";
@@ -158,6 +158,8 @@ export default function StationPanel({ content }: { content: StationContent }) {
 }
 
 function StationBody({ content }: { content: StationContent }) {
+  const cam = content.surfCam ? <LiveCamPill cam={content.surfCam} /> : null;
+
   if (content.offline) {
     return (
       <div>
@@ -168,6 +170,7 @@ function StationBody({ content }: { content: StationContent }) {
           <span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--accent)" }} />
           Out of service
         </div>
+        {cam}
         <div className="station-prose" dangerouslySetInnerHTML={{ __html: content.bodyHtml }} />
       </div>
     );
@@ -176,6 +179,7 @@ function StationBody({ content }: { content: StationContent }) {
   if (content.projects?.length) {
     return (
       <div>
+        {cam}
         {content.bodyHtml && (
           <div className="station-prose mb-7" dangerouslySetInnerHTML={{ __html: content.bodyHtml }} />
         )}
@@ -189,14 +193,62 @@ function StationBody({ content }: { content: StationContent }) {
   }
 
   if (content.slug === "resume") {
-    return <ResumeView content={content} />;
+    return <ResumeView content={content} cam={cam} />;
   }
 
   return (
     <div>
+      {cam}
       <div className="station-prose" dangerouslySetInnerHTML={{ __html: content.bodyHtml }} />
       {content.links?.length ? <LinkRow links={content.links} /> : null}
     </div>
+  );
+}
+
+/**
+ * A broadcast-style "LIVE" chip linking to a real public surf cam (or, for the
+ * offshore data buoy, its NDBC station page). Pulsing accent dot, mono uppercase
+ * label, opens in a new tab. Built from the panel tokens only — no off-palette color.
+ */
+function LiveCamPill({ cam }: { cam: { label: string; href: string } }) {
+  return (
+    <a
+      href={cam.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group mb-6 inline-flex items-center gap-2.5 rounded-full border py-2 pl-3 pr-3.5 transition-colors"
+      style={{
+        borderColor: "var(--panel-line)",
+        background: "var(--panel-bg)",
+        color: "var(--panel-ink)",
+      }}
+    >
+      {/* Pulsing broadcast dot: a soft expanding ring under a solid accent core. */}
+      <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+        <motion.span
+          className="absolute inset-0 rounded-full"
+          style={{ background: "var(--accent)" }}
+          initial={{ scale: 1, opacity: 0.55 }}
+          animate={{ scale: 2.4, opacity: 0 }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+          aria-hidden
+        />
+        <span className="relative h-2.5 w-2.5 rounded-full" style={{ background: "var(--accent)" }} />
+      </span>
+      <span
+        className="font-mono text-xs font-medium uppercase tracking-[0.12em]"
+        style={{ color: "var(--accent)" }}
+      >
+        {cam.label}
+      </span>
+      <span
+        className="font-mono text-xs transition-transform group-hover:translate-x-0.5"
+        style={{ color: "var(--panel-muted)" }}
+        aria-hidden
+      >
+        ↗
+      </span>
+    </a>
   );
 }
 
@@ -237,9 +289,10 @@ function ProjectCardView({ project }: { project: ProjectCard }) {
   );
 }
 
-function ResumeView({ content }: { content: StationContent }) {
+function ResumeView({ content, cam }: { content: StationContent; cam: ReactNode }) {
   return (
     <div>
+      {cam}
       {content.facts?.length ? (
         <ul className="font-mono mb-6 space-y-1 text-[13px]" style={{ color: "var(--panel-muted)" }}>
           {content.facts.map((f) => (

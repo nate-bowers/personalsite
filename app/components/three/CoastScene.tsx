@@ -20,6 +20,8 @@ import Birds from "./Birds";
 import Ferry from "./Ferry";
 import Buoys from "./Buoys";
 import Ambient from "./Ambient";
+import Whale from "./Whale";
+import Ship from "./Ship";
 import CameraRig from "./CameraRig";
 
 // Replace three's fog with the shared height fog before any material compiles.
@@ -99,6 +101,8 @@ export default function CoastScene({
       <Water conditions={conditions} sunDir={SUN_DIR} openness={openness} />
       <Buoys terrain={data} conditions={conditions} openness={openness} />
       <Ambient conditions={conditions} openness={openness} />
+      <Ship data={data} conditions={conditions} openness={openness} />
+      <Whale data={data} conditions={conditions} openness={openness} />
       <CameraRig anchors={data.anchors} />
       <ReadySignal onReady={onReady} />
       <EffectComposer>

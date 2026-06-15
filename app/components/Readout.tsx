@@ -9,6 +9,14 @@ export default function Readout({ conditions }: { conditions: Conditions }) {
   const { stationId, waveHeightFt, periodS, observedAt, source } = conditions;
   const isOffline = source === "default";
 
+  // Which break the buoy reports for, so the numbers aren't just an abstract ID.
+  const BREAKS: Record<string, string> = {
+    "46012": "Mavericks · Half Moon Bay",
+    "46026": "San Francisco",
+    "46042": "Monterey Bay",
+  };
+  const breakName = BREAKS[stationId];
+
   const fmt = (n: number | null, unit: string) => (n === null ? "—" : `${n}${unit}`);
   const observedLabel = observedAt
     ? new Date(observedAt).toLocaleTimeString("en-US", {
@@ -37,6 +45,7 @@ export default function Readout({ conditions }: { conditions: Conditions }) {
         <>
           <p>
             <span style={{ color: "var(--accent)" }}>STN {stationId}</span>
+            {breakName ? <span className="opacity-80"> · {breakName}</span> : null}
             {source === "fallback" && <span className="opacity-60"> · fallback</span>}
           </p>
           <p className="mt-0.5">

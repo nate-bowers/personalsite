@@ -4,6 +4,9 @@ station: STN 2004
 established: est. 2004 · Bay Area
 location: 37.77°N 122.42°W
 report: "About · one station · reporting"
+surfCam:
+  label: "Stinson Beach cam"
+  href: "https://www.surfline.com/surf-report/stinson-beach/5842041f4e65fad6a7708807"
 ---
 
 <!-- TODO(nate): replace this placeholder with your own ~150 words. Keep it plain;

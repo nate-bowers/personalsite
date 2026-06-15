@@ -1,6 +1,7 @@
 "use client";
 
 import type { Conditions } from "@/lib/ndbc";
+import { useQuality, setQuality } from "@/lib/quality";
 
 function Row({
   label,
@@ -64,6 +65,9 @@ export default function Controls({
     };
   const set = (key: keyof Conditions, val: number) => setOverride({ ...c, [key]: val });
 
+  const quality = useQuality();
+  const calm = quality === "calm";
+
   return (
     <div
       className="fixed bottom-4 right-4 z-40 w-[232px] rounded-lg p-3"
@@ -101,6 +105,28 @@ export default function Controls({
           </button>
         </div>
       )}
+
+      {/* Calmer seas — halves the heavy geometry for laptops that run the 3D
+          scene but not at 60fps. */}
+      <button
+        type="button"
+        role="switch"
+        aria-checked={calm}
+        onClick={() => setQuality(calm ? "full" : "calm")}
+        className="mt-2.5 flex w-full items-center justify-between border-t pt-2 font-mono text-[10px] uppercase tracking-wide"
+        style={{ borderColor: "rgba(255,255,255,0.12)", color: "var(--ink)" }}
+      >
+        <span className="opacity-70">calmer seas</span>
+        <span
+          className="relative inline-flex h-3.5 w-7 items-center rounded-full transition-colors"
+          style={{ background: calm ? "var(--accent)" : "rgba(255,255,255,0.2)" }}
+        >
+          <span
+            className="absolute h-2.5 w-2.5 rounded-full bg-white transition-all"
+            style={{ left: calm ? "16px" : "2px" }}
+          />
+        </span>
+      </button>
     </div>
   );
 }

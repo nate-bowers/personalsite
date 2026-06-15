@@ -3,6 +3,7 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { useQuality } from "@/lib/quality";
 import {
   elevationAtScene,
   lngLatToScene,
@@ -72,7 +73,9 @@ interface Instance {
   color: THREE.Color;
 }
 
-function buildForest(data: TerrainData) {
+function buildForest(data: TerrainData, calm: boolean) {
+  const coniferTarget = calm ? 760 : 1500;
+  const cypressTarget = calm ? 130 : 240;
   const rng = mulberry32(20260611);
   const { meta } = data;
   const halfW = meta.sceneWidth / 2;
@@ -94,7 +97,7 @@ function buildForest(data: TerrainData) {
   const c = new THREE.Color();
 
   let tries = 0;
-  while (conifers.length < 1500 && tries < 220000) {
+  while (conifers.length < coniferTarget && tries < 220000) {
     tries++;
     const x = (rng() * 2 - 1) * halfW;
     const z = (rng() * 2 - 1) * halfD;
@@ -132,7 +135,7 @@ function buildForest(data: TerrainData) {
   }
 
   tries = 0;
-  while (cypress.length < 240 && tries < 60000) {
+  while (cypress.length < cypressTarget && tries < 60000) {
     tries++;
     const x = (rng() * 2 - 1) * halfW;
     const z = (rng() * 2 - 1) * halfD;
@@ -193,7 +196,11 @@ function Species({
 export default function Trees({ data }: { data: TerrainData }) {
   const coniferGeo = useMemo(() => coniferGeometry(), []);
   const cypressGeo = useMemo(() => cypressGeometry(), []);
-  const { conifers, cypress } = useMemo(() => buildForest(data), [data]);
+  const quality = useQuality();
+  const { conifers, cypress } = useMemo(
+    () => buildForest(data, quality === "calm"),
+    [data, quality],
+  );
 
   return (
     <group>

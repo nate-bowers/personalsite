@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useQuality } from "@/lib/quality";
 import * as THREE from "three";
 import { sampleElevation, type TerrainData } from "@/lib/terrain";
 import { TOKENS, HEIGHT_FOG_GLSL, FOG } from "./atmosphere";
@@ -139,12 +140,14 @@ export default function Terrain({
   data: TerrainData;
   sunDir: [number, number, number];
 }) {
+  const quality = useQuality();
   const geometry = useMemo(() => {
     const { meta } = data;
     const halfW = meta.sceneWidth / 2;
     const halfD = meta.sceneDepth / 2;
+    const seg = quality === "calm" ? 150 : SEG;
 
-    const geo = new THREE.PlaneGeometry(1, 1, SEG, SEG);
+    const geo = new THREE.PlaneGeometry(1, 1, seg, seg);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position as THREE.BufferAttribute;
 
@@ -168,7 +171,7 @@ export default function Terrain({
         // instead — band-limit at the actual sampling rate.
         const gx = u * (meta.width - 1);
         const gz = v * (meta.height - 1);
-        const fp = ((meta.width - 1) / (SEG * CORE)) * 0.5; // half vertex spacing in px
+        const fp = ((meta.width - 1) / (seg * CORE)) * 0.5; // half vertex spacing in px
         let sum = 0;
         for (let oz = -1; oz <= 1; oz++) {
           for (let ox = -1; ox <= 1; ox++) {
@@ -239,7 +242,7 @@ export default function Terrain({
     }
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     return geo;
-  }, [data]);
+  }, [data, quality]);
 
   const uniforms = useMemo(
     () => ({

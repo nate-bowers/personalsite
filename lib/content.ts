@@ -36,6 +36,7 @@ export interface StationContent {
   facts?: string[];
   pdf?: string;
   links?: StationLink[];
+  surfCam?: { label: string; href: string };
   offline?: boolean;
 }
 
@@ -59,6 +60,7 @@ export function getStation(slug: Slug): StationContent {
     facts: data.facts,
     pdf: data.pdf,
     links: data.links,
+    surfCam: data.surfCam,
     offline: data.offline ?? false,
   };
 }

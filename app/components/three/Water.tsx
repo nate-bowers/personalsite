@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef } from "react";
+import { useQuality } from "@/lib/quality";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Conditions } from "@/lib/ndbc";
@@ -184,8 +185,10 @@ export default function Water({
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const params = oceanParams(conditions);
 
+  const quality = useQuality();
   const geometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(SIZE, SIZE, SEGS, SEGS);
+    const segs = quality === "calm" ? 110 : SEGS;
+    const geo = new THREE.PlaneGeometry(SIZE, SIZE, segs, segs);
     const pos = geo.attributes.position as THREE.BufferAttribute;
     const open = new Float32Array(pos.count);
     for (let i = 0; i < pos.count; i++) {
@@ -194,7 +197,7 @@ export default function Water({
     }
     geo.setAttribute("aOpen", new THREE.BufferAttribute(open, 1));
     return geo;
-  }, [openness]);
+  }, [openness, quality]);
 
   const uniforms = useMemo(
     () => ({

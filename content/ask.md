@@ -4,6 +4,9 @@ station: STN 0000
 established: offline · deploying soon
 location: "—"
 report: "Station 0000 · RAG agent · deploying soon"
+surfCam:
+  label: "Station 46012 data"
+  href: "https://www.ndbc.noaa.gov/station_page.php?station=46012"
 offline: true
 ---
 

@@ -14,6 +14,13 @@ import { TOKENS } from "./atmosphere";
 
 const UP = new THREE.Vector3(0, 1, 0);
 
+// Display overrides for the floating buoy labels (the anchors.json labels stay
+// the canonical section names).
+const LABELS: Record<string, string> = {
+  about: "About me",
+  contact: "Contact me",
+};
+
 /**
  * NOAA 3-metre discus buoy (DESIGN-PHASE2.md §4 / FIX 4), ~480 triangles:
  * flat tapered disc hull in accent orange with a cream deck ring, tripod
@@ -161,14 +168,14 @@ function OneBuoy({
           ref={labelRef}
           type="button"
           onClick={openPanel}
-          aria-label={`Open ${anchor.label} — station ${anchor.place}`}
+          aria-label={`Open ${LABELS[anchor.slug] ?? anchor.label} — station ${anchor.place}`}
           className="buoy3d-label font-mono cursor-pointer whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] uppercase tracking-wide"
           style={{
             background: "color-mix(in srgb, var(--panel-bg) 82%, transparent)",
             color: "var(--panel-ink)",
           }}
         >
-          {anchor.label}
+          {LABELS[anchor.slug] ?? anchor.label}
         </button>
       </Html>
     </group>

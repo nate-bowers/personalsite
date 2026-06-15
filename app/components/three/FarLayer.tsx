@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useMemo, useRef } from "react";
+import { useQuality } from "@/lib/quality";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import {
@@ -40,14 +41,16 @@ function FarTerrain({
   far: FarData;
   sunDir: [number, number, number];
 }) {
+  const quality = useQuality();
   const geometry = useMemo(() => {
+    const seg = quality === "calm" ? 90 : SEG;
     const { meta } = data;
     const halfW = meta.sceneWidth / 2;
     const halfD = meta.sceneDepth / 2;
     const [fx0, fz0] = lngLatToScene(meta, meta.far.bbox.lngMin, meta.far.bbox.latMax);
     const [fx1, fz1] = lngLatToScene(meta, meta.far.bbox.lngMax, meta.far.bbox.latMin);
 
-    const geo = new THREE.PlaneGeometry(1, 1, SEG, SEG);
+    const geo = new THREE.PlaneGeometry(1, 1, seg, seg);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position as THREE.BufferAttribute;
 
@@ -55,7 +58,7 @@ function FarTerrain({
     const hazeT = new Float32Array(pos.count);
     // far-grid footprint averaging (the mesh is ~3x coarser than the far grid;
     // single taps would moiré on the distant ridges)
-    const fpx = ((fx1 - fx0) / SEG) * 0.33;
+    const fpx = ((fx1 - fx0) / seg) * 0.33;
     const farAvg = (x: number, z: number) =>
       (farElevationAtScene(far, x - fpx, z) +
         farElevationAtScene(far, x + fpx, z) +
@@ -135,7 +138,7 @@ function FarTerrain({
     normals.needsUpdate = true;
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     return geo;
-  }, [data, far]);
+  }, [data, far, quality]);
 
   const uniforms = useMemo(
     () => ({
@@ -171,6 +174,7 @@ function mulberry32(seed: number) {
 
 /** Sparse instanced conifers on the far ridges — one draw call. */
 function FarTrees({ data, far }: { data: TerrainData; far: FarData }) {
+  const quality = useQuality();
   const geometry = useMemo(() => {
     const trunk = new THREE.CylinderGeometry(0.014, 0.02, 0.08, 5);
     trunk.translate(0, 0.04, 0);
@@ -190,8 +194,9 @@ function FarTrees({ data, far }: { data: TerrainData; far: FarData }) {
     const rng = mulberry32(46012);
     const out: { pos: [number, number, number]; scale: number; color: THREE.Color }[] = [];
     const c = new THREE.Color();
+    const target = quality === "calm" ? 1150 : 2300;
     let tries = 0;
-    while (out.length < 2300 && tries < 160000) {
+    while (out.length < target && tries < 160000) {
       tries++;
       const x = fx0 + rng() * (fx1 - fx0);
       const z = fz0 + rng() * (fz1 - fz0);
@@ -210,7 +215,7 @@ function FarTrees({ data, far }: { data: TerrainData; far: FarData }) {
       });
     }
     return out;
-  }, [data, far]);
+  }, [data, far, quality]);
 
   const ref = useRef<THREE.InstancedMesh>(null);
   useLayoutEffect(() => {

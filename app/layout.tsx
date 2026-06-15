@@ -4,6 +4,7 @@ import "./globals.css";
 import RendererStage from "./components/RendererStage";
 import Readout from "./components/Readout";
 import BuoyField from "./components/BuoyField";
+import KeyboardNav from "./components/KeyboardNav";
 import IndexNav from "./components/IndexNav";
 import FirstVisitHint from "./components/FirstVisitHint";
 import { getConditions } from "@/lib/conditions";
@@ -67,6 +68,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="min-h-dvh overflow-hidden font-body" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: INIT }} />
         <RendererStage conditions={conditions}>
+          <KeyboardNav />
           <BuoyField />
 
           {/* Persistent header: name top-left, instrument readout top-right. */}
@@ -82,12 +84,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               >
                 Nate Bowers
               </h1>
-              <p
-                className="font-body mt-1 text-sm sm:text-base opacity-80"
-                style={{ color: "var(--ink)", textShadow: "0 1px 12px rgba(22,42,62,0.55)" }}
-              >
-                applied math + econ · builds with data
-              </p>
               <FirstVisitHint />
             </div>
             <div className="shrink-0 text-right">
