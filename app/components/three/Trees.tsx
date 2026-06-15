@@ -4,6 +4,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { useQuality } from "@/lib/quality";
+import { TOKENS } from "./atmosphere";
 import {
   elevationAtScene,
   lngLatToScene,
@@ -11,11 +12,25 @@ import {
   type TerrainData,
 } from "@/lib/terrain";
 
+// Distance haze baked into each tree's albedo. The shared shader fog barely
+// engages on high ground close to the camera, so dark conifers stay crisp
+// against the pale, faded ridges. Pre-fading the instance color toward the warm
+// haze (referenced from the near-fixed home camera) makes distant trees
+// genuinely dissolve into the atmosphere. Stacks under the real shader fog.
+const HAZE = new THREE.Color(TOKENS.fog);
+const HOME_X = -11;
+const HOME_Z = 7;
+function hazeTint(out: THREE.Color, x: number, z: number) {
+  const d = Math.hypot(x - HOME_X, z - HOME_Z);
+  const t = THREE.MathUtils.clamp((d - 13) / 16, 0, 1); // 13 near .. 29 far
+  out.lerp(HAZE, t * t * 0.82);
+}
+
 // keep clearings around the landmarks so they read instantly
 const CLEARINGS: [number, number, number][] = [
   [-122.195, 37.405, 0.7], // Hoover Tower
   [-122.2578, 37.8721, 0.6], // Campanile
-  [-121.9, 37.395, 1.35], // Levi's Stadium (rectangular footprint)
+  [-121.98, 37.4, 1.5], // Levi's Stadium (rectangular footprint)
   [-122.4783, 37.8199, 0.9], // Golden Gate approaches (full span)
 ];
 
@@ -126,6 +141,7 @@ function buildForest(data: TerrainData, calm: boolean) {
     if (rng() > p) continue;
 
     c.setHSL(0.31 + rng() * 0.07, 0.32 + rng() * 0.18, 0.16 + rng() * 0.12);
+    hazeTint(c, x, z);
     conifers.push({
       pos: [x, elev * meta.yScale, z],
       scale: 0.55 + rng() * 0.8,
@@ -146,6 +162,7 @@ function buildForest(data: TerrainData, calm: boolean) {
       openWaterAtScene(data, x - 0.18, z) > 0.25 || openWaterAtScene(data, x, z + 0.18) > 0.25;
     if (!coastal || rng() > 0.5) continue;
     c.setHSL(0.34 + rng() * 0.04, 0.26 + rng() * 0.12, 0.14 + rng() * 0.08);
+    hazeTint(c, x, z);
     cypress.push({
       pos: [x, elev * meta.yScale, z],
       scale: 0.6 + rng() * 0.7,

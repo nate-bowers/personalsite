@@ -29,6 +29,12 @@ import { albedo, terrainVertexShader, terrainFragmentShader } from "./Terrain";
  */
 
 const SEG = 150;
+
+// Haze bake for the far-tier trees, referenced from the near-fixed home camera
+// (same approach as Trees.tsx) so distant trees dissolve into the atmosphere.
+const HAZE = new THREE.Color(TOKENS.fog);
+const HOME_X = -11;
+const HOME_Z = 7;
 const FEATHER = 1.4; // units outside the core bbox blended core-edge -> far
 const OUTER_COLLAPSE = 3; // units inside the far edge collapsing to haze plain
 
@@ -208,6 +214,11 @@ function FarTrees({ data, far }: { data: TerrainData; far: FarData }) {
       if (elev < 110 || elev > 1350) continue;
       if (rng() < 0.45) continue;
       c.setHSL(0.33 + rng() * 0.05, 0.22 + rng() * 0.12, 0.14 + rng() * 0.08);
+      // far-tier trees live well past the core; bake heavy haze into them so
+      // they read as a soft tree-line dissolving into the atmosphere, never
+      // crisp dark dots on the faded ridges
+      const d = Math.hypot(x - HOME_X, z - HOME_Z);
+      c.lerp(HAZE, THREE.MathUtils.clamp((d - 16) / 18, 0, 1) * 0.9);
       out.push({
         pos: [x, elev * meta.yScale, z],
         scale: 0.8 + rng() * 0.9,
