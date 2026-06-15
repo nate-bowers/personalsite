@@ -104,13 +104,19 @@ export function installHeightFog() {
   `;
   THREE.ShaderChunk.fog_fragment = /* glsl */ `
     #ifdef USE_FOG
-      gl_FragColor.rgb = applyHeightFog(gl_FragColor.rgb, vFogDepth, vFogWorldY);
+      // Fog by TRUE camera distance, matching the terrain/water shaders (which
+      // use length(cameraPosition - worldPos)). View-space depth (vFogDepth)
+      // under-fogged anything off the view axis, so props toward the frame edges
+      // — the trees especially — stayed crisp while the ridgelines right behind
+      // them washed out. One distance metric for every material now.
+      float hfDist = length(vFogWorldPos - cameraPosition);
+      gl_FragColor.rgb = applyHeightFog(gl_FragColor.rgb, hfDist, vFogWorldY);
       // Distance sun-halo: backlit standard-material props (trees, buoys, ferry,
       // ship, whale, landmarks) must dissolve into the SAME warm haze the
       // terrain/water shaders add by hand — otherwise the trees stay crisp and
       // dark while the ridges behind them glow, and they "don't fade".
       {
-        float hfDf = smoothstep(${FOG.FAR0.toFixed(1)}, ${FOG.FAR1.toFixed(1)}, vFogDepth);
+        float hfDf = smoothstep(${FOG.FAR0.toFixed(1)}, ${FOG.FAR1.toFixed(1)}, hfDist);
         vec3 hfV = normalize(vFogWorldPos - cameraPosition);
         vec3 hfS = vec3(0.3693, 0.0499, -0.9280); // normalized SUN_DIR
         gl_FragColor.rgb += ${v3(c(TOKENS.sunGlow))} * pow(max(dot(hfV, hfS), 0.0), 18.0) * 0.7 * hfDf;
