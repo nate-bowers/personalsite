@@ -21,14 +21,15 @@ const HOME_LOOK = new THREE.Vector3(2.2, 2.0, -1.8);
 // spread (Stinson … Big Sur) falls off the sides. Pull the home camera back
 // along its view axis so the whole coast fits the tall frame, and widen the FOV.
 const HOME_POS_PORTRAIT = HOME_LOOK.clone().add(
-  HOME_POS.clone().sub(HOME_LOOK).multiplyScalar(2.0),
+  HOME_POS.clone().sub(HOME_LOOK).multiplyScalar(1.85),
 );
-// Portrait re-aims toward the centre of the buoy spread so all five fit the
-// narrow frame with margin for their labels (verified by projecting at 390×844:
-// maxX ≈ 0.80). Pull-back + a wide FOV are the minimum that fit the spread.
+// Portrait re-aims toward the centre of the buoy spread and pulls back just
+// enough — a fully fitted shot felt too wide/zoomed-out. Four buoys sit well
+// inside; the far Contact (Big Sur) rides the right edge on the narrowest
+// phones, with the bottom index nav as the guaranteed reach.
 const HOME_LOOK_PORTRAIT = new THREE.Vector3(1.0, 1.0, 1.0);
 const FOV_LANDSCAPE = 50;
-const FOV_PORTRAIT = 68;
+const FOV_PORTRAIT = 64;
 
 // Dev-only: ?debugcam=px,py,pz,tx,ty,tz pins the camera for the visual
 // iteration loop (model close-ups). Never active in production builds.
