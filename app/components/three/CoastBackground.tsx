@@ -83,7 +83,9 @@ export default function CoastBackground({
   // static image instead of stranding the visitor on "establishing conditions...".
   useEffect(() => {
     if (ready) return;
-    const t = setTimeout(() => onUnavailable?.(), 8000);
+    // Generous so slow-but-capable laptops still present the scene rather than
+    // being dropped to the static image; only a genuine stall trips it.
+    const t = setTimeout(() => onUnavailable?.(), 15000);
     return () => clearTimeout(t);
   }, [ready, onUnavailable]);
 

@@ -21,9 +21,10 @@ export type RenderTier = "loading" | "scene" | "static";
 export interface RenderState {
   tier: RenderTier;
   compact: boolean; // narrow viewport → bottom-sheet panels
+  webgl2: boolean; // device can run the live scene (offer the opt-in from static)
 }
 
-const LOADING: RenderState = { tier: "loading", compact: false };
+const LOADING: RenderState = { tier: "loading", compact: false, webgl2: false };
 
 const Ctx = createContext<RenderState>(LOADING);
 export const useRenderState = () => useContext(Ctx);
@@ -46,22 +47,22 @@ const CoastBackground = dynamic(() => import("./three/CoastBackground"), {
 function detectRender(): RenderState {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const compact = window.innerWidth < 768;
-  // Dev-only escape hatch for verifying tiers: ?render=static | ?render=scene.
-  if (process.env.NODE_ENV !== "production") {
-    const force = new URLSearchParams(window.location.search).get("render");
-    if (force === "static") return { tier: "static", compact };
-  }
   let webgl2 = false;
   try {
     webgl2 = !!document.createElement("canvas").getContext("webgl2");
   } catch {
     webgl2 = false;
   }
+  // Dev-only escape hatch for verifying tiers: ?render=static | ?render=scene.
+  if (process.env.NODE_ENV !== "production") {
+    const force = new URLSearchParams(window.location.search).get("render");
+    if (force === "static") return { tier: "static", compact, webgl2 };
+  }
   // No WebGL2, or the visitor asked for reduced motion → the still image of the
   // same coast (motion-free, bulletproof). Otherwise the live scene — at "calm"
-  // quality on small / mobile screens (seeded in lib/quality).
-  if (!webgl2 || reduced) return { tier: "static", compact };
-  return { tier: "scene", compact };
+  // quality on small / mobile / weak machines (seeded in lib/quality).
+  if (!webgl2 || reduced) return { tier: "static", compact, webgl2 };
+  return { tier: "scene", compact, webgl2 };
 }
 
 // Detected once on the client; useSyncExternalStore gives the correct
@@ -81,7 +82,15 @@ export default function RendererStage({
   // Honest degradation: if the 3D chunk/terrain can't load or never presents a
   // frame, fall to the static image of the same scene — not a stall, not an ocean.
   const [sceneFailed, setSceneFailed] = useState(false);
-  const tier: RenderTier = sceneFailed && detected.tier === "scene" ? "static" : detected.tier;
+  // Manual opt-in from the static tier: a visitor whose device CAN run WebGL2 but
+  // landed on static (slow first load, or reduced-motion) can ask for the scene.
+  const [forceScene, setForceScene] = useState(false);
+  const tier: RenderTier =
+    forceScene && detected.webgl2 && !sceneFailed
+      ? "scene"
+      : sceneFailed && detected.tier === "scene"
+        ? "static"
+        : detected.tier;
   const state: RenderState = { ...detected, tier };
 
   // "Take the controls" can override the live data feeding the scene.
@@ -97,8 +106,20 @@ export default function RendererStage({
     <Ctx.Provider value={state}>
       {/* Golden-hour gradient: base layer + streaming placeholder. */}
       <SeaSky />
-      {/* No WebGL2 / scene failed → still image of the same coast + DOM buoys. */}
-      {tier === "static" && <StaticCoast />}
+      {/* No WebGL2 / scene failed → still image of the same coast + DOM buoys.
+          If the device can actually run WebGL2, offer to load the live scene. */}
+      {tier === "static" && (
+        <StaticCoast
+          onEnter={
+            detected.webgl2
+              ? () => {
+                  setSceneFailed(false);
+                  setForceScene(true);
+                }
+              : undefined
+          }
+        />
+      )}
       {/* z-0 wrapper (owned by CoastBackground) so the canvas receives pointer
           events; the chrome (nav z-15, header z-20, panel z-30) stays above it. */}
       {tier === "scene" && (
