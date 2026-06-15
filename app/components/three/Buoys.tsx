@@ -140,6 +140,9 @@ function OneBuoy({
   }, [anchor.slug]);
 
   const openPanel = () => router.push(`/${anchor.slug}`);
+  // Warm this station's route on first engagement (hover / press) so its panel
+  // is already cached when the click lands — instant even on slow devices/links.
+  const warm = () => router.prefetch(`/${anchor.slug}`);
 
   return (
     <group
@@ -148,9 +151,11 @@ function OneBuoy({
         e.stopPropagation();
         openPanel();
       }}
+      onPointerDown={warm}
       onPointerOver={(e) => {
         e.stopPropagation();
         document.body.style.cursor = "pointer";
+        warm();
       }}
       onPointerOut={() => (document.body.style.cursor = "")}
     >
@@ -167,6 +172,8 @@ function OneBuoy({
         <button
           ref={labelRef}
           type="button"
+          onPointerDown={warm}
+          onPointerEnter={warm}
           onClick={openPanel}
           aria-label={`Open ${LABELS[anchor.slug] ?? anchor.label} — station ${anchor.place}`}
           className="buoy3d-label font-mono cursor-pointer whitespace-nowrap rounded-full px-1.5 py-0.5 text-[9px] uppercase tracking-tight sm:px-2 sm:text-[11px] sm:tracking-wide"

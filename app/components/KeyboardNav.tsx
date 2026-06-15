@@ -36,5 +36,21 @@ export default function KeyboardNav() {
     return () => window.removeEventListener("keydown", onKey);
   }, [router]);
 
+  // Pre-warm every station route once the scene is idle, so a buoy click / index
+  // link opens its panel instantly — no per-click fetch, snappy on slow devices.
+  useEffect(() => {
+    const warm = () => ORDER.forEach((slug) => router.prefetch(`/${slug}`));
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(warm);
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(warm, 1200);
+    return () => window.clearTimeout(t);
+  }, [router]);
+
   return null;
 }
