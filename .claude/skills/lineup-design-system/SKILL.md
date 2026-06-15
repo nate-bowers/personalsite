@@ -54,7 +54,7 @@ Scale: display 56–80px desktop / 36–44 mobile · body 17px/1.6 · mono 13px,
 3. **One interaction verb: click/tap.** No drag, no free-orbit, no scroll mechanics, no key combos. Buoys read as buttons — cursor pointer, hover brightens the label, visible focus ring, Enter activates.
 4. **First-visit hint.** One quiet line ("tap a buoy") fades in once, then never again (localStorage).
 5. **Index fallback.** A tiny mono index, bottom-left, plain links to all five sections — bulletproof for keyboard/screen-reader/recruiter. In 3D it also triggers the camera flights. Doubles as the footer.
-6. **Panels: one way in, two ways out.** Buoy/index opens; X **and** Esc close; browser **back** also closes (and returns the camera). No nested nav. In 3D the panel is a right **40% side sheet** over the live scene; the 2D fallback keeps the **bottom sheet**.
+6. **Panels: one way in, two ways out.** Buoy/index opens; X **and** Esc close; browser **back** also closes (and returns the camera). No nested nav. On wide viewports the panel is a right **40% side sheet** over the scene; compact (mobile) viewports keep the **bottom sheet**.
 7. **Nothing load-bearing is hidden.** Content is never behind curiosity. Five seconds on the default shot still shows the name, what he does, and the live-data hook.
 8. **One rich element.** The coast scene is the only place complexity is allowed.
 
@@ -67,8 +67,8 @@ The **conditions readout** — always-visible instrument panel, live buoy number
 
 - **Camera is on rails — full stop.** No free-look/orbit. Default shot: offshore, elevated 30–40°, coast diagonal in frame, slow ambient drift so the scene breathes. Buoy click → smooth eased fly (~1.8s) to a low shot; close flies home; mid-flight retargets cleanly (no snap).
 - **Water:** Gerstner displacement driven by the live buoy via the **shared `oceanParams()` mapping** (`lib/ocean-map.ts`) — identical constants in 2D and 3D. Buoys heave/pitch/roll on the local wave function so they sit *in* the water.
-- **Fallback renderer (non-negotiable):** the v1 2D `<Ocean>` stays in the codebase. 3D only when **WebGL2 + no `prefers-reduced-motion` + viewport ≥ 768px**; otherwise the 2D ocean. One `<Stage>` owns this decision. Recruiters open links on locked-down laptops.
-- `prefers-reduced-motion` → 2D static sea, no bob, no camera motion. Always honor it.
+- **One scene, three fidelity tiers (non-negotiable):** every visitor sees the same golden-hour coast — never a different renderer. **Full** 3D on WebGL2 desktops; **degraded-live** 3D (`quality="calm"`: fewer trees/segments, no bloom, DPR ≤ 1.25) on phones and narrow viewports; a **static still image of the same coast** (`StaticCoast`, with DOM buoys over it) when there's no WebGL2 **or** `prefers-reduced-motion`, and as the safety-net if the scene fails to present within ~8s. `RendererStage` owns this decision. The v1 2D `<Ocean>` is **retired**. Recruiters on locked-down laptops still get the coast — as an image.
+- `prefers-reduced-motion` → the **static coast image** (zero motion), not the live scene. Always honor it.
 - **No scroll-jacking, no forced animation tour.** Bloom glows the glitter, never the UI.
 
 ---
@@ -84,7 +84,7 @@ Surf-report register, used lightly. Panels open with **one** report line, then g
 2. **Scroll-jacking, forced scroll tours, or free-orbit camera.** Camera is on rails; the visitor owns the scrollbar.
 3. **Off-palette color.** Only the golden-hour tokens + `--accent`. No new accent, no second highlight hue.
 4. **Re-introducing the time-of-day palette system / breaking the golden-hour lock.** (Reversed from v1 — golden hour is now the locked art direction.)
-5. **Dropping the 2D fallback renderer**, or gating the whole site behind WebGL. Mobile/reduced-motion/no-WebGL must still work.
+5. **Stranding weak devices** — gating the whole site behind WebGL, or shipping a blank/foreign fallback. No-WebGL2 and reduced-motion must still get the static coast image; mobile must still get the (degraded) scene. The v1 2D ocean is retired — do not reintroduce it.
 6. **Wrong font for the role**; more than the three fonts.
 7. **Faking data freshness** or hiding the offline/default state.
 8. **Photoreal / low-poly-flat extremes, or a realism arms race** (SSR, heavy reflections). Stylized-realistic, atmosphere-led, under the perf budget (<150k tris, 60fps desktop / 30fps phone target).
@@ -96,8 +96,8 @@ Surf-report register, used lightly. Panels open with **one** report line, then g
 - [ ] Only golden-hour tokens used — no stray hex, `--accent` only on buoys/readout/links.
 - [ ] Right font per role; mono for data/IDs/place-names only.
 - [ ] All five buoys reachable + labeled from the default shot; index nav present.
-- [ ] One verb (click); buoys are focusable with visible ring; Enter activates; deep links + back button work in **both** renderers.
-- [ ] Panel: side-sheet in 3D, bottom-sheet in 2D; X + Esc + back all close; focus trapped then returned.
-- [ ] 3D only when WebGL2 + ≥768px + no reduced-motion; 2D fallback verified by forcing it.
+- [ ] One verb (click); buoys are focusable with visible ring; Enter activates; deep links + back button work in the scene **and** the static fallback.
+- [ ] Panel: side-sheet on wide viewports, bottom-sheet on compact; X + Esc + back all close; focus trapped then returned.
+- [ ] Live scene on WebGL2 (calm on mobile/narrow); static coast image when no-WebGL2 or reduced-motion; each verified by forcing it. No v1 ocean.
 - [ ] First paint not regressed — the 3D bundle is lazy-loaded behind the landing frame.
 - [ ] Readout shows live data + honest offline state; AA contrast; alt text; OG image set.

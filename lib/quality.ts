@@ -20,6 +20,7 @@ if (typeof window !== "undefined") {
   try {
     const v = localStorage.getItem(KEY);
     if (v === "calm" || v === "full") current = v;
+    else if (window.innerWidth < 768) current = "calm"; // small / mobile defaults to calm
   } catch {
     /* ignore */
   }

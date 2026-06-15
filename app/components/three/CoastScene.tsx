@@ -6,6 +6,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import type { Conditions } from "@/lib/ndbc";
 import type { TerrainData, FarData } from "@/lib/terrain";
 import { computeOpenness } from "@/lib/openness";
+import { useQuality } from "@/lib/quality";
 import { installHeightFog, TOKENS, FOG } from "./atmosphere";
 import { lazy, Suspense } from "react";
 import Terrain from "./Terrain";
@@ -66,13 +67,16 @@ export default function CoastScene({
 }) {
   // Real-bathymetry swell exposure — shared by the water mesh, buoys and ferry.
   const openness = useMemo(() => computeOpenness(data), [data]);
+  // calm = the perf tier (mobile / small screens, or the "calmer seas" toggle):
+  // lower DPR cap and no post-processing.
+  const calm = useQuality() === "calm";
 
   return (
     <Canvas
       eventSource={eventSource as RefObject<HTMLElement>}
       eventPrefix="client"
       camera={{ position: [-11.0, 8.0, 7.0], fov: 50, near: 0.1, far: 1400 }}
-      dpr={[1, 1.75]}
+      dpr={calm ? [1, 1.25] : [1, 1.75]}
       gl={{ antialias: true }}
       onCreated={(state) => {
         // debug hook for the visual-verification loop
@@ -105,9 +109,13 @@ export default function CoastScene({
       <Whale data={data} conditions={conditions} openness={openness} />
       <CameraRig anchors={data.anchors} />
       <ReadySignal onReady={onReady} />
-      <EffectComposer>
-        <Bloom intensity={0.5} luminanceThreshold={0.82} luminanceSmoothing={0.3} mipmapBlur />
-      </EffectComposer>
+      {/* Bloom is the heaviest fragment cost; drop post-processing on the calm
+          (mobile / low-power) tier so phones stay smooth. */}
+      {!calm && (
+        <EffectComposer>
+          <Bloom intensity={0.5} luminanceThreshold={0.82} luminanceSmoothing={0.3} mipmapBlur />
+        </EffectComposer>
+      )}
     </Canvas>
   );
 }

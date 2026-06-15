@@ -78,6 +78,15 @@ export default function CoastBackground({
     };
   }, [onUnavailable]);
 
+  // Safety net: if the scene never presents a frame within the budget (a stalled
+  // chunk, a wedged WebGL context, a device that just can't), hand off to the
+  // static image instead of stranding the visitor on "establishing conditions...".
+  useEffect(() => {
+    if (ready) return;
+    const t = setTimeout(() => onUnavailable?.(), 8000);
+    return () => clearTimeout(t);
+  }, [ready, onUnavailable]);
+
   return (
     <div ref={wrapperRef} className="fixed inset-0 z-0">
       <div

@@ -2,12 +2,12 @@
 
 **A portfolio that is a live 3D model of the Northern California coast** — Stinson Beach to Big Sur, rendered from real USGS elevation data at permanent golden hour, with the ocean driven by real NOAA buoy data. Content sections are NOAA-style buoys anchored at real surf spots; clicking one flies the rail-mounted camera down to it and opens a station-report side panel.
 
-- **Canonical spec:** `DESIGN-PHASE2.md` (art direction, geography, camera, water/buoys, budgets). `DESIGN.md` records v1 (the 2D ocean now serving as the fallback renderer). Read the Phase-2 spec before any scene work.
+- **Canonical spec:** `DESIGN-PHASE2.md` (art direction, geography, camera, water/buoys, budgets). `DESIGN.md` records v1 (the now-retired 2D ocean). Read the Phase-2 spec before any scene work.
 - **Enforcement:** the `lineup-design-system` skill (`.claude/skills/lineup-design-system/SKILL.md`) fires on any UI/style/copy/animation/scene change.
 
 ## Stack
 
-Next.js (App Router) + TypeScript · three / @react-three/fiber / drei / @react-three/postprocessing for the 3D coast · Tailwind for layout, CSS variables for the palette · the v1 Canvas-2D ocean kept as the fallback renderer (reduced-motion, <768px, no WebGL2) · Framer Motion (`motion` package) for panels · NOAA NDBC data via `/api/conditions` · terrain built offline by `pnpm build:terrain` (AWS Terrarium tiles → int16 heightmap committed in `public/terrain/`) · deployed on Vercel.
+Next.js (App Router) + TypeScript · three / @react-three/fiber / drei / @react-three/postprocessing for the 3D coast · Tailwind for layout, CSS variables for the palette · the scene degrades to "calm" 3D on mobile/narrow screens and to a static coast image (no-WebGL2 / reduced-motion) — the v1 2D ocean is retired · Framer Motion (`motion` package) for panels · NOAA NDBC data via `/api/conditions` · terrain built offline by `pnpm build:terrain` (AWS Terrarium tiles → int16 heightmap committed in `public/terrain/`) · deployed on Vercel.
 
 ## Non-negotiables
 
@@ -16,7 +16,7 @@ Next.js (App Router) + TypeScript · three / @react-three/fiber / drei / @react-
 - **One Gerstner source of truth:** `lib/gerstner.ts` generates the water shader GLSL and feeds the CPU twin (buoys/ferry). Never fork the constants.
 - **Fonts by role:** Instrument Serif (display) · Schibsted Grotesk (body) · IBM Plex Mono (data/IDs only).
 - **Clarity:** all five buoys visible in the default shot; labels always on; one verb (click); buoys are real `<button>`s with visible focus; panels close via X **and** Esc **and** back button; camera on rails — no free-look.
-- **No scroll-jacking.** Honor `prefers-reduced-motion` (2D fallback renderer).
+- **No scroll-jacking.** Honor `prefers-reduced-motion` (→ the static coast image, zero motion).
 - **The data is real** — and its offline/default state is shown honestly, never faked.
 
 ## Layout

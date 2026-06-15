@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import type { ProjectCard, StationContent } from "@/lib/content";
-import { useRenderMode } from "./RendererStage";
+import { useRenderState } from "./RendererStage";
 
 /**
  * A station report panel: slides up from the bottom (~75vh desktop, full-screen
@@ -17,8 +17,8 @@ export default function StationPanel({ content }: { content: StationContent }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [closing, setClosing] = useState(false);
 
-  // 3D mode: a right-side 40% sheet over the live scene. 2D fallback: the bottom sheet.
-  const side = useRenderMode() === "3d";
+  // Wide viewport: a right-side 40% sheet over the scene. Compact (mobile): bottom sheet.
+  const side = !useRenderState().compact;
 
   const close = useCallback(() => {
     setClosing((already) => {

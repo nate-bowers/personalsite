@@ -56,7 +56,7 @@ Each buoy gets a small mono label as before (always visible, clarity rules apply
 
 **Clarity rules carry over hard:** all five buoys visible from the default shot, labels always on, one click verb, the index nav remains and now also triggers the camera moves. Browser back closes panel and returns camera.
 
-**Reduced motion / weak devices:** the v1 2D ocean stays in the codebase as the fallback renderer. prefers-reduced-motion, mobile below a GPU capability check, or WebGL failure all get the 2D version. This is non-negotiable: recruiters open links on locked-down laptops.
+**Reduced motion / weak devices (revised — the v1 2D ocean is retired):** one scene, three fidelity tiers. Full 3D on WebGL2 desktops; degraded-live 3D ("calm" quality — fewer trees/segments, no bloom, low DPR) on phones and narrow viewports; and a **static still image of the same coast** (`StaticCoast`, with DOM buoys) for no-WebGL2 **or** prefers-reduced-motion, plus as the safety-net when the scene fails to present within ~8s. Non-negotiable: every visitor sees the coast — recruiters on locked-down laptops get it as an image, never a different ocean.
 
 ---
 
@@ -133,7 +133,7 @@ Tasks:
 3. Water: a Gerstner-displaced plane using the same conditions-to-amplitude/speed/chop mapping as the v1 ocean (read it from the existing Ocean component and keep the constants identical). Two-tone water colors from tokens plus an elongated sun-glitter specular path toward the western sun.
 4. Sky: gradient dome from sky-zenith to sky-low with a sun disc and soft glow, bloom pass tuned subtle (the glitter should glow, the UI must not).
 5. Default camera per DESIGN-PHASE2.md section 3: offshore, elevated, coast diagonal in frame, slow ambient drift. No user camera control of any kind.
-6. Renderer selection: 3D scene only when WebGL2 available AND no prefers-reduced-motion AND viewport >= 768px (mobile gets 2D for now). Otherwise render the existing 2D Ocean. One <Stage> component owns this decision.
+6. Renderer selection (revised): the live 3D scene whenever WebGL2 is available — "calm" quality on viewports < 768px. No WebGL2 OR prefers-reduced-motion → the static coast image (StaticCoast). RendererStage owns this decision; the v1 2D Ocean is retired.
 7. Use the webapp-testing skill: screenshot the default shot at 1440px and 768px, compare against the art direction, iterate until the fog layering and glitter path match the spec, and include the final screenshots in your report.
 
 Done when: the default shot reads as golden-hour NorCal coast (your screenshots prove it), live conditions visibly drive the water, 60fps on desktop, fallback path verified by forcing each condition, first paint not regressed.

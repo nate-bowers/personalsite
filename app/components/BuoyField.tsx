@@ -35,8 +35,8 @@ export default function BuoyField() {
     }
   }, []);
 
-  // In 3D mode the buoys live in the scene; the DOM buoy field is for the 2D renderer.
-  if (mode === "3d") return null;
+  // In the live scene the buoys are 3D; this DOM buoy field is the static fallback.
+  if (mode !== "static") return null;
 
   // Mobile: column starts higher so all five fit with no scroll at 360px.
   // Desktop: absolute scatter is positioned within the top-[40%] container.
