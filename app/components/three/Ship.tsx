@@ -156,7 +156,7 @@ export default function Ship({
     const s = waterSurface(cx, cz, t, params, open);
 
     // sit the hull's waterline just at the surface; gentle heave only
-    g.position.set(cx, s.height - 0.03, cz);
+    g.position.set(cx, s.height + 0.05, cz);
 
     // local +z points to the bow → yaw to face travel direction
     g.rotation.y = Math.atan2(vx, vz);
