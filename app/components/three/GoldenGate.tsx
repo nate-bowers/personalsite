@@ -13,14 +13,14 @@ import { lngLatToScene, type TerrainData } from "@/lib/terrain";
  * rods, and the Fort Point pylon pair at the south end. Rendered larger than
  * true scale — same compression license as the geography (DESIGN-PHASE2.md §4).
  *
- * Five draw calls: towers+pylons / deck+truss / cables / suspenders / concrete.
+ * Four draw calls: towers+pylons / deck+truss / cables / suspenders. The bridge
+ * reads as pure international-orange structure — no grey concrete piers/anchorages.
  */
 
 type V3 = [number, number, number];
 
 const ORANGE = "#e35e30";
 const ORANGE_DEEP = "#c9512c";
-const CONCRETE = "#bfa98f";
 
 // ---- proportions (local units; group scale 0.55) -------------------------
 const SPAN = 1.0; // tower-to-tower
@@ -31,7 +31,6 @@ const DECK_W = 0.13;
 const DECK_L = 1.64; // shore to shore (side spans + approaches)
 const LEG_X = 0.082; // tower-leg centres straddle the roadway
 const SADDLE_Y = 0.94; // cable saddle height
-const ANCHOR_Z = 0.84; // anchorage block centres
 
 // art-deco tower: four portal struts, legs step back at each level
 const STRUT_Y = [0.46, 0.626, 0.773, 0.902];
@@ -158,22 +157,11 @@ function buildBridge() {
     }
   }
 
-  // -- concrete: tower piers + shore anchorage blocks -----------------------
-  const concreteParts: THREE.BufferGeometry[] = [];
-  for (const tz of [-TOWER_Z, TOWER_Z]) {
-    concreteParts.push(box(0.23, 0.16, 0.165, 0, 0, tz)); // pier / fender
-  }
-  for (const sz of [-1, 1]) {
-    concreteParts.push(box(0.19, 0.18, 0.15, 0, 0.36, sz * ANCHOR_Z));
-    concreteParts.push(box(0.23, 0.26, 0.19, 0, 0.18, sz * (ANCHOR_Z + 0.012)));
-  }
-
   return {
     towers: mergeGeometries(towerParts),
     deck: mergeGeometries(deckParts),
     cables: mergeGeometries(cableParts),
     rods: mergeGeometries(rodParts),
-    concrete: mergeGeometries(concreteParts),
   };
 }
 
@@ -198,9 +186,6 @@ export default function GoldenGate({ data }: { data: TerrainData }) {
       </mesh>
       <mesh geometry={geo.rods}>
         <meshStandardMaterial color={ORANGE} roughness={0.6} emissive={ORANGE} emissiveIntensity={0.3} />
-      </mesh>
-      <mesh geometry={geo.concrete}>
-        <meshStandardMaterial color={CONCRETE} roughness={0.85} emissive={CONCRETE} emissiveIntensity={0.22} />
       </mesh>
     </group>
   );

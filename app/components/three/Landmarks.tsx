@@ -19,10 +19,10 @@ type V3 = [number, number, number];
 // hoover + levis are nudged a few km from their true addresses onto open,
 // camera-facing ground (foothill bench / bayshore flats) so they stay visible
 const SPOTS = {
-  hoover: { lng: -122.195, lat: 37.405 },
-  campanile: { lng: -122.2578, lat: 37.8721 },
-  levis: { lng: -122.07, lat: 37.4 }, // west onto the open flats, toward the camera
-  transamerica: { lng: -122.4028, lat: 37.7952 }, // real spot, SF financial district
+  hoover: { lng: -122.195, lat: 37.475 }, // nudged a good bit north, clearer of the others
+  campanile: { lng: -122.235, lat: 37.858 }, // a little southeast
+  levis: { lng: -122.13, lat: 37.46 }, // northwest out of the rise it was sitting in
+  transamerica: { lng: -122.4028, lat: 37.775 }, // a little south of its real spot
 };
 
 export default function Landmarks({ data }: { data: TerrainData }) {

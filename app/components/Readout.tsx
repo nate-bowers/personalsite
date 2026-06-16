@@ -35,7 +35,7 @@ export default function Readout({ conditions }: { conditions: Conditions }) {
     >
       {isOffline ? (
         <>
-          <p style={{ color: "var(--accent)" }}>STN offline</p>
+          <p style={{ color: "var(--accent)" }}>Buoy offline</p>
           <p className="opacity-80">showing typical conditions</p>
           <p className="opacity-60 mt-1">
             {fmt(waveHeightFt, " ft")} @ {fmt(periodS, "s")}
@@ -44,8 +44,7 @@ export default function Readout({ conditions }: { conditions: Conditions }) {
       ) : (
         <>
           <p>
-            <span style={{ color: "var(--accent)" }}>STN {stationId}</span>
-            {breakName ? <span className="opacity-80"> · {breakName}</span> : null}
+            <span style={{ color: "var(--accent)" }}>{breakName ?? "Live buoy"}</span>
             {source === "fallback" && <span className="opacity-60"> · fallback</span>}
           </p>
           <p className="mt-0.5">

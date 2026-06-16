@@ -22,12 +22,12 @@ import { waterSurface, dispFade } from "@/lib/gerstner";
  */
 
 // --- placement / motion ---------------------------------------------------
-const LANE_X = -11.0; // shipping lane, far west on the open Pacific
+const LANE_X = -8.0; // shipping lane: on the visible offshore water but pushed toward the left frame edge so it reads as a passing vessel, not a hero object
 const LANE_SWAY = 1.1; // gentle E/W drift so the track isn't a dead-straight line
-const Z_SOUTH = 13.0; // south end of the run
-const Z_SPAN = 30.0; // long N-S crossing before it wraps
+const Z_SOUTH = 3.0; // south end of the run — capped well north of the camera (z=7) so the ship never balloons into the foreground
+const Z_SPAN = 12.0; // crossing length: sails from the lower-left water up into the western haze, then wraps
 const SPEED = 0.16; // units/s — a slow container ship at distance
-const SCALE = 1.5; // larger than literal scale (it's far) but still reads as a ship
+const SCALE = 1.0; // reads as a distant passing ship without dominating the foreground
 
 // In-palette, desaturated container colors (weathered, tasteful).
 const CONTAINER_COLORS = [
@@ -142,7 +142,7 @@ export default function Ship({
 
     // long slow N->S crossing; wraps far off-frame. Phase offset so a crossing
     // is already underway on first load.
-    const d = (t * SPEED + 9) % Z_SPAN;
+    const d = (t * SPEED + 3) % Z_SPAN;
     const cz = Z_SOUTH - d;
     const cx = LANE_X + Math.sin(t * 0.012) * LANE_SWAY;
 
