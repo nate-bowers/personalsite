@@ -27,7 +27,7 @@ const LANE_SWAY = 1.1; // gentle E/W drift so the track isn't a dead-straight li
 const Z_SOUTH = 3.0; // south end of the run — capped well north of the camera (z=7) so the ship never balloons into the foreground
 const Z_SPAN = 12.0; // crossing length: sails from the lower-left water up into the western haze, then wraps
 const SPEED = 0.16; // units/s — a slow container ship at distance
-const SCALE = 1.0; // reads as a distant passing ship without dominating the foreground
+const SCALE = 0.8; // reads as a distant passing ship without dominating the foreground
 
 // In-palette, desaturated container colors (weathered, tasteful).
 const CONTAINER_COLORS = [
@@ -62,7 +62,9 @@ function buildHull(): THREE.BufferGeometry {
     }
   }
   bow.computeVertexNormals();
-  bow.translate(0, H / 2, L - 0.25 + 0.325 - 0.001);
+  // butt the bow's flat (aft) face against the body's front face (z = L/2 - 0.25)
+  // so the wedge connects to the hull instead of floating ahead of it
+  bow.translate(0, H / 2, L / 2 - 0.25 + 0.325 - 0.001);
   parts.push(bow);
 
   const g = mergeGeometries(parts, false);

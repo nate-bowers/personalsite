@@ -21,7 +21,7 @@ type V3 = [number, number, number];
 const SPOTS = {
   hoover: { lng: -122.195, lat: 37.55 }, // pushed well north (deeper) to clear Levi's
   campanile: { lng: -122.235, lat: 37.858 }, // a little southeast
-  levis: { lng: -122.22, lat: 37.46 }, // pushed well west onto the open South Bay flats, away from Hoover
+  levis: { lng: -122.22, lat: 37.43 }, // moved south (toward camera) onto open flats for max visibility, clear of Hoover behind
   transamerica: { lng: -122.4028, lat: 37.775 }, // a little south of its real spot
 };
 
