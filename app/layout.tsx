@@ -36,22 +36,22 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://personalsite-one-z
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Nate Bowers — The Lineup",
+    default: "Nate Bowers — Portfolio",
     template: "%s · Nate Bowers",
   },
   description:
     "A portfolio that is a live model of the Pacific. The ocean you see is driven by real NOAA buoy data, right now.",
   openGraph: {
-    title: "Nate Bowers — The Lineup",
+    title: "Nate Bowers — Portfolio",
     description:
       "A portfolio that is a live model of the Pacific — the ocean is driven by real NOAA buoy data.",
     url: SITE_URL,
-    siteName: "The Lineup",
+    siteName: "Nate Bowers",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nate Bowers — The Lineup",
+    title: "Nate Bowers — Portfolio",
     description: "A portfolio that is a live model of the Pacific.",
   },
 };
@@ -80,9 +80,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <h1
                 className="font-display leading-none"
                 style={{
-                  color: "var(--ink)",
+                  // Deliberate one-off: BLACK (not --ink) for contrast against the bright golden sky.
+                  color: "#000000",
                   fontSize: "clamp(2rem, 7vw, 5rem)",
-                  textShadow: "0 2px 18px rgba(22,42,62,0.5)",
+                  textShadow: "0 2px 18px rgba(255,217,160,0.55)",
                 }}
               >
                 Nate Bowers

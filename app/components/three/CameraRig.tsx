@@ -52,11 +52,13 @@ export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
   const dbg = useMemo(() => debugCam(), []);
 
   // Widen the FOV on portrait so more of the coast fits the narrow frame.
+  /* eslint-disable react-hooks/immutability -- three.js cameras are mutated in place; updateProjectionMatrix() applies the change. */
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     cam.fov = portrait ? FOV_PORTRAIT : FOV_LANDSCAPE;
     cam.updateProjectionMatrix();
   }, [camera, portrait]);
+  /* eslint-enable react-hooks/immutability */
 
   const desiredPos = useRef(new THREE.Vector3());
   const desiredLook = useRef(new THREE.Vector3());

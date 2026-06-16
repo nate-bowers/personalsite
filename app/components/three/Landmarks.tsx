@@ -5,6 +5,7 @@ import { lngLatToScene, terrainYAtScene, type TerrainData } from "@/lib/terrain"
 import HooverTower from "./HooverTower";
 import Campanile from "./Campanile";
 import LevisStadium from "./LevisStadium";
+import TransamericaPyramid from "./TransamericaPyramid";
 
 /**
  * Iconic landmarks at their real positions, rendered larger than life (the
@@ -21,6 +22,7 @@ const SPOTS = {
   hoover: { lng: -122.195, lat: 37.405 },
   campanile: { lng: -122.2578, lat: 37.8721 },
   levis: { lng: -122.07, lat: 37.4 }, // west onto the open flats, toward the camera
+  transamerica: { lng: -122.4028, lat: 37.7952 }, // real spot, SF financial district
 };
 
 export default function Landmarks({ data }: { data: TerrainData }) {
@@ -45,6 +47,7 @@ export default function Landmarks({ data }: { data: TerrainData }) {
       hoover: ground(SPOTS.hoover.lng, SPOTS.hoover.lat),
       campanile: ground(SPOTS.campanile.lng, SPOTS.campanile.lat),
       levis: groundMax(SPOTS.levis.lng, SPOTS.levis.lat, 1.4),
+      transamerica: ground(SPOTS.transamerica.lng, SPOTS.transamerica.lat),
     };
   }, [data]);
 
@@ -53,6 +56,7 @@ export default function Landmarks({ data }: { data: TerrainData }) {
       <HooverTower pos={at.hoover} />
       <Campanile pos={at.campanile} />
       <LevisStadium pos={at.levis} />
+      <TransamericaPyramid pos={at.transamerica} />
     </group>
   );
 }

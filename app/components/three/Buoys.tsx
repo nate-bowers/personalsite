@@ -159,16 +159,20 @@ function OneBuoy({
       }}
       onPointerOut={() => (document.body.style.cursor = "")}
     >
-      <BuoyModel />
+      {/* visual model scaled 1.75×; the outer group (ref) keeps the unscaled
+          heave/pitch/roll placement on the wave surface untouched */}
+      <group scale={1.75}>
+        <BuoyModel />
+      </group>
       {/* generous invisible raycast target so the whole buoy is easy to click/tap
           (visible={false} on the material skips the render pass entirely while
-          the geometry stays raycastable) */}
-      <mesh position={[0, 0.2, 0]}>
-        <sphereGeometry args={[0.85, 12, 10]} />
+          the geometry stays raycastable) — radius + offset scaled with the model */}
+      <mesh position={[0, 0.35, 0]}>
+        <sphereGeometry args={[1.49, 12, 10]} />
         <meshBasicMaterial visible={false} />
       </mesh>
       {/* always-visible, keyboard-focusable label (billboards toward the camera) */}
-      <Html position={[0, 0.78, 0]} center zIndexRange={[10, 6]}>
+      <Html position={[0, 1.3, 0]} center zIndexRange={[10, 6]}>
         <button
           ref={labelRef}
           type="button"

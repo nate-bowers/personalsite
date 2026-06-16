@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const alt =
-  "Nate Bowers — The Lineup: a portfolio that is a live model of the Pacific";
+  "Nate Bowers — Portfolio: a portfolio that is a live model of the Pacific";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
