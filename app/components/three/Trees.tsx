@@ -18,7 +18,7 @@ import {
 
 // keep clearings around the landmarks so they read instantly
 const CLEARINGS: [number, number, number][] = [
-  [-122.195, 37.55, 0.7], // Hoover Tower
+  [-122.275, 37.42, 0.7], // Hoover Tower
   [-122.235, 37.858, 0.6], // Campanile
   [-122.22, 37.43, 1.5], // Levi's Stadium (rectangular footprint)
   [-122.4783, 37.8199, 0.9], // Golden Gate approaches (full span)
