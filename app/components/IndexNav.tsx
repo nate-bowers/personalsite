@@ -25,15 +25,15 @@ export default function IndexNav() {
             </Link>
           </li>
         ))}
-        {/* The colophon ("about this site") sits alongside the sections — it reads
-            as one of the others, but it's a docs page, not a buoy/station. */}
+        {/* "About the site" sits alongside the sections — it reads as one of the
+            others, but it's a docs page, not a buoy/station. */}
         <li>
           <Link
-            href="/colophon"
+            href="/about-the-site"
             className="opacity-70 transition-opacity hover:opacity-100 hover:underline"
             style={{ textDecorationColor: "var(--accent)" }}
           >
-            colophon
+            about the site
           </Link>
         </li>
       </ul>

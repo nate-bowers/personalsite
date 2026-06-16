@@ -145,7 +145,7 @@ export default function LevisStadium({ pos }: { pos: V3 }) {
   }, []);
 
   return (
-    <group position={pos} scale={1.392} rotation={[0, 0.35, 0]}>
+    <group position={pos} scale={1.1} rotation={[0, 0.35, 0]}>
       <mesh geometry={grey}>
         <meshStandardMaterial color="#a39a8d" roughness={0.9} emissive="#a39a8d" emissiveIntensity={0.25} />
       </mesh>

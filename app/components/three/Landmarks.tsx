@@ -19,7 +19,7 @@ type V3 = [number, number, number];
 // hoover + levis are nudged a few km from their true addresses onto open,
 // camera-facing ground (foothill bench / bayshore flats) so they stay visible
 const SPOTS = {
-  hoover: { lng: -122.275, lat: 37.42 }, // pulled toward the camera (closer than Levi's) so it reads in FRONT of the stadium
+  hoover: { lng: -122.283, lat: 37.41 }, // in front of the stadium and centered on its exposed near corner
   campanile: { lng: -122.235, lat: 37.858 }, // a little southeast
   levis: { lng: -122.22, lat: 37.43 }, // moved south (toward camera) onto open flats for max visibility, clear of Hoover behind
   transamerica: { lng: -122.4028, lat: 37.775 }, // a little south of its real spot

@@ -22,7 +22,12 @@ export default function StaticCoast({ onEnter }: { onEnter?: () => void }) {
           alt=""
           draggable={false}
           className="h-full w-full select-none object-cover"
-          style={{ objectPosition: "center 42%" }}
+          style={{
+            objectPosition: "center 42%",
+            // The baked still is darker/redder than the live scene; lift it toward
+            // golden hour so the static tier reads as daytime, not "night mode".
+            filter: "brightness(1.32) saturate(0.9) contrast(0.93)",
+          }}
         />
       </div>
       {onEnter ? (

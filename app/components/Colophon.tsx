@@ -8,7 +8,7 @@ import { motion } from "motion/react";
  * Colophon — a small "about this site" docs page. NOT a station/buoy: it has no
  * NDBC number and isn't anchored in the water. It's a fixed, scrollable overlay
  * on the readable paper surface, reachable only from the index-nav link (or its
- * deep link /colophon). One way in, three ways out: the X, Escape, and the
+ * deep link /about-the-site). One way in, three ways out: the X, Escape, and the
  * browser back button (the X/Esc push "/", which is what the back button does
  * from a deep link). Focus is trapped while open and returned on close.
  * See DESIGN-PHASE2.md §clarity rule #6 — built standalone, not via StationPanel.
@@ -116,19 +116,19 @@ export default function Colophon() {
               className="font-mono text-xs uppercase tracking-wide"
               style={{ color: "var(--accent)" }}
             >
-              Colophon
+              About the site
             </p>
             <h2 id="colophon-title" className="font-display mt-1 text-3xl leading-none sm:text-4xl">
-              About this site
+              How the coast is built
             </h2>
             <p className="font-mono mt-2 text-[11px]" style={{ color: "var(--panel-muted)" }}>
-              How the coast is built, and what&apos;s hidden in it
+              What&apos;s real in it, and what&apos;s hidden
             </p>
           </div>
           <button
             type="button"
             onClick={close}
-            aria-label="Close colophon"
+            aria-label="Close about the site"
             className="shrink-0 cursor-pointer rounded-full border p-2 leading-none transition-colors hover:bg-black/5"
             style={{ borderColor: "var(--panel-line)", color: "var(--panel-ink)" }}
           >
