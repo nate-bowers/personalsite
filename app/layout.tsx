@@ -36,22 +36,22 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://personalsite-one-z
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Nate Bowers — Portfolio",
+    default: "Nate Bowers · Portfolio",
     template: "%s · Nate Bowers",
   },
   description:
     "A portfolio that is a live model of the Pacific. The ocean you see is driven by real NOAA buoy data, right now.",
   openGraph: {
-    title: "Nate Bowers — Portfolio",
+    title: "Nate Bowers · Portfolio",
     description:
-      "A portfolio that is a live model of the Pacific — the ocean is driven by real NOAA buoy data.",
+      "A portfolio that is a live model of the Pacific. The ocean is driven by real NOAA buoy data.",
     url: SITE_URL,
     siteName: "Nate Bowers",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nate Bowers — Portfolio",
+    title: "Nate Bowers · Portfolio",
     description: "A portfolio that is a live model of the Pacific.",
   },
 };

@@ -11,6 +11,5 @@ links:
   - { label: "Email", href: "mailto:nathan.g.bowers@vanderbilt.edu" }
   - { label: "GitHub", href: "https://github.com/nate-bowers" }
   - { label: "LinkedIn", href: "https://www.linkedin.com/in/nate-bowers" }
+  - { label: "X", href: "https://x.com/nate62216389" }
 ---
-
-Email's the surest way to reach me — but any of these will land.
