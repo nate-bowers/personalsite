@@ -217,10 +217,6 @@ export default function Colophon() {
                   A <strong>&ldquo;calmer seas&rdquo;</strong> toggle drops the graphics tier
                   by hand.
                 </li>
-                <li>
-                  <strong>&ldquo;Take the controls&rdquo;</strong> overrides the live ocean
-                  data with your own.
-                </li>
               </ul>
             </Section>
 

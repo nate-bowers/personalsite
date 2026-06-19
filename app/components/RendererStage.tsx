@@ -93,10 +93,6 @@ export default function RendererStage({
         : detected.tier;
   const state: RenderState = { ...detected, tier };
 
-  // "Take the controls" can override the live data feeding the scene.
-  const [override, setOverride] = useState<Conditions | null>(null);
-  const effective = override ?? conditions;
-
   // Preload terrain in parallel with the lazy three.js chunk.
   useEffect(() => {
     if (tier === "scene") void loadTerrain().catch(() => {});
@@ -123,11 +119,11 @@ export default function RendererStage({
       {/* z-0 wrapper (owned by CoastBackground) so the canvas receives pointer
           events; the chrome (nav z-15, header z-20, panel z-30) stays above it. */}
       {tier === "scene" && (
-        <CoastBackground conditions={effective} onUnavailable={() => setSceneFailed(true)} />
+        <CoastBackground conditions={conditions} onUnavailable={() => setSceneFailed(true)} />
       )}
       {tier === "loading" && <Establishing />}
       {children}
-      {tier !== "loading" && <Controls live={conditions} override={override} setOverride={setOverride} />}
+      {tier !== "loading" && <Controls />}
     </Ctx.Provider>
   );
 }
