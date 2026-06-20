@@ -3,11 +3,13 @@
 import { useEffect, useRef } from "react";
 import Buoy, { type BuoyDef } from "./Buoy";
 import { useRenderMode } from "./RendererStage";
+import { stationVisible } from "@/lib/visibility";
 
 /**
- * Places the five buoys. Desktop: scattered across the water (absolute, per the
- * wireframe). Mobile: a centered vertical column. All five sit inside the initial
- * viewport with no scrolling at every breakpoint (DESIGN.md clarity rule #1).
+ * Places the active buoys (static tier). Desktop: scattered across the water
+ * (absolute, per the wireframe). Mobile: a centered vertical column. All sit inside
+ * the initial viewport with no scrolling at every breakpoint (DESIGN.md clarity
+ * rule #1). Hidden stations (see lib/visibility.ts) drop out.
  */
 const BUOYS: (BuoyDef & { delay: number; left: string; top: string })[] = [
   { slug: "about", label: "About me", station: "STN 2004", delay: 0.0, left: "15%", top: "26%" },
@@ -46,7 +48,7 @@ export default function BuoyField() {
         ref={ref}
         className="relative flex h-full flex-col items-center justify-center gap-3 px-6 md:block md:gap-0 md:px-0"
       >
-        {BUOYS.map((b) => (
+        {BUOYS.filter((b) => stationVisible(b.slug)).map((b) => (
           <Buoy
             key={b.slug}
             def={b}

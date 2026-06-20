@@ -40,11 +40,11 @@ export const metadata: Metadata = {
     template: "%s · Nate Bowers",
   },
   description:
-    "A portfolio that is a live model of the Pacific. The ocean you see is driven by real NOAA buoy data, right now.",
+    "A live 3D model of the Northern California coast. The ocean is driven by a real NOAA buoy, right now. Built by Nate Bowers.",
   openGraph: {
     title: "Nate Bowers · Portfolio",
     description:
-      "A portfolio that is a live model of the Pacific. The ocean is driven by real NOAA buoy data.",
+      "A live 3D model of the Northern California coast, with the ocean driven by a real NOAA buoy right now.",
     url: SITE_URL,
     siteName: "Nate Bowers",
     type: "website",
@@ -52,7 +52,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Nate Bowers · Portfolio",
-    description: "A portfolio that is a live model of the Pacific.",
+    description:
+      "A live 3D model of the Northern California coast, driven by a real NOAA buoy right now.",
   },
 };
 

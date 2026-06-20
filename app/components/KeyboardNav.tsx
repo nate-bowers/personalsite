@@ -2,14 +2,16 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { stationVisible } from "@/lib/visibility";
 
 /**
- * Number-key navigation (a11y / power-user affordance, no UI added): keys 1–5
- * fly to each buoy via the existing route-driven camera rails; 0 or Escape
- * returns home. Ignored while typing in a field or when a modifier is held, so
- * it never fights real input or browser shortcuts.
+ * Number-key navigation (a11y / power-user affordance, no UI added): the number
+ * keys fly to each visible buoy in order via the route-driven camera rails; 0 or
+ * Escape returns home. Ignored while typing in a field or when a modifier is held,
+ * so it never fights real input or browser shortcuts. Hidden stations (see
+ * lib/visibility.ts) drop out of the order.
  */
-const ORDER = ["about", "projects", "ask", "resume", "contact"] as const;
+const ORDER = (["about", "projects", "ask", "resume", "contact"] as const).filter(stationVisible);
 
 export default function KeyboardNav() {
   const router = useRouter();

@@ -261,13 +261,21 @@ function ProjectCardView({ project }: { project: ProjectCard }) {
   // Never render unfinished placeholders: drop any TODO-prefixed entries.
   const isTodo = (s: string) => /^\s*todo/i.test(s);
   const tagline = project.tagline && !isTodo(project.tagline) ? project.tagline : "";
+  const date = project.date && !isTodo(project.date) ? project.date : "";
   const stack = (project.stack ?? []).filter((s) => !isTodo(s));
   const metrics = (project.metrics ?? []).filter((m) => !isTodo(m));
   const links = (project.links ?? []).filter((l) => !isTodo(l.label) && !isTodo(l.href));
 
   return (
     <article className="rounded-xl border p-5" style={{ borderColor: "var(--panel-line)" }}>
-      <h3 className="font-display text-xl leading-tight">{project.name}</h3>
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="font-display text-xl leading-tight">{project.name}</h3>
+        {date ? (
+          <span className="font-mono shrink-0 text-[11px]" style={{ color: "var(--panel-muted)" }}>
+            {date}
+          </span>
+        ) : null}
+      </div>
       {tagline ? <p className="mt-1.5">{tagline}</p> : null}
       {stack.length ? (
         <ul className="mt-3 flex flex-wrap gap-1.5">

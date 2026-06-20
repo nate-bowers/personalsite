@@ -2,20 +2,26 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
+import { stationVisible } from "./visibility";
 
 export type Slug = "about" | "projects" | "ask" | "resume" | "contact";
 
-export const SECTIONS: { slug: Slug; label: string }[] = [
-  { slug: "about", label: "About" },
-  { slug: "projects", label: "Projects" },
-  { slug: "ask", label: "Ask Nate" },
-  { slug: "resume", label: "Resume" },
-  { slug: "contact", label: "Contact" },
-];
+// Hidden stations (e.g. Ask Nate while it's unbuilt) are filtered out of the nav.
+// See lib/visibility.ts for the switch.
+export const SECTIONS: { slug: Slug; label: string }[] = (
+  [
+    { slug: "about", label: "About" },
+    { slug: "projects", label: "Projects" },
+    { slug: "ask", label: "Ask Nate" },
+    { slug: "resume", label: "Resume" },
+    { slug: "contact", label: "Contact" },
+  ] as { slug: Slug; label: string }[]
+).filter((s) => stationVisible(s.slug));
 
 export interface ProjectCard {
   name: string;
   tagline: string;
+  date?: string;
   stack: string[];
   metrics: string[];
   links: StationLink[];

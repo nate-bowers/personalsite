@@ -21,6 +21,6 @@ work started.
 SurfScore reconciles messy buoy reports against forecast data to score the surf.
 dailybriefmail searches the live web each morning and writes one brief per reader.
 Different domains, same shape: real inputs in, a decision in the middle, something true
-out. The site you're on is another instance. The ocean behind this panel is driven by a
-NOAA buoy reporting off the California coast right now, and it tells you honestly when
-that buoy goes quiet.
+out. The site you're on is another instance, and I built it: the terrain is real USGS
+elevation data, and the ocean is driven by a live NOAA buoy reporting off the California
+coast right now. It tells you honestly when that buoy goes quiet.

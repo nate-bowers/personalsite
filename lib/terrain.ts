@@ -4,6 +4,8 @@
  * (~1MB raw); it sits behind the lazy 3D bundle so it never blocks first paint.
  */
 
+import { stationVisible } from "./visibility";
+
 export interface FarMeta {
   z: number;
   bbox: { lngMin: number; lngMax: number; latMin: number; latMax: number };
@@ -68,7 +70,9 @@ export function loadTerrain(): Promise<TerrainData> {
       const heights = Float32Array.from(new Int16Array(bin));
       return {
         meta,
-        anchors: anchorsFile.anchors,
+        // Hidden stations (e.g. Ask Nate while unbuilt) drop their buoy from the
+        // scene; see lib/visibility.ts.
+        anchors: (anchorsFile.anchors as Anchor[]).filter((a) => stationVisible(a.slug)),
         places: anchorsFile.places,
         heights,
       } as TerrainData;
