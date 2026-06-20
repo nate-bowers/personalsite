@@ -18,7 +18,7 @@ projects:
       - "Finds a relevant source ~99% of the time (LLM-judge eval, 100 questions)"
       - "Citations deep-link to the timestamp; runs on free tiers"
     links:
-      - { label: "Live", href: "https://huberman-rag-natebowers05-9016-natebowers05-9016s-projects.vercel.app" }
+      - { label: "Live", href: "https://huberman-gpt.natebowers.dev" }
       - { label: "GitHub", href: "https://github.com/nate-bowers/huberman-rag" }
   - name: dailybriefmail
     date: May 2026
