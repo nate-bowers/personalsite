@@ -11,14 +11,16 @@ import { oceanParams } from "@/lib/ocean-map";
 import { waterSurface, dispFade } from "@/lib/gerstner";
 
 /**
- * A rare humpback BREACH out in the open Pacific seaward of station 46012 —
- * the single most memorable beat on the page (~1-in-20 loads; force ?whale=1).
+ * A humpback BREACH out in the open Pacific seaward of station 46012 — the
+ * single most memorable beat on the page. It breaches on every load and then
+ * repeats on a loop (~once every 30s).
  *
  * The whale lives submerged. A few seconds after the scene is ready it makes
- * exactly ONE breach: rises out of the sea at ~45°, arcs and rolls, then crashes
+ * its first breach: rises out of the sea at ~45°, arcs and rolls, then crashes
  * back with a splash; a soft misty blow puffs up as it settles, and it slips
- * under again. Vertical motion is a hand-shaped time curve whose entry/exit are
- * pinned onto the live Gerstner surface so it meets the real sea exactly.
+ * under again — then waits out the rest of the cycle and does it again.
+ * Vertical motion is a hand-shaped time curve whose entry/exit are pinned onto
+ * the live Gerstner surface so it meets the real sea exactly.
  *
  * Backlit by the near-behind sun, the slate body would read as a silhouette, so
  * a mild same-color emissive keeps the form alive (same trick as the landmarks).
@@ -159,6 +161,7 @@ const T_FALL = 2.7; // crashes back down
 const T_DONE = 3.0; // fully back under
 const SPLASH_AT = T_FALL; // splash + blow trigger near re-entry
 const SPOUT_LIFE = 2.2; // how long the blow lingers
+const BREACH_PERIOD = 30; // seconds between breaches — it repeats on a loop
 
 // vertical offset of the whale's centre ABOVE the water surface as a function
 // of breach-relative time. 0 = centre at the sea surface (mostly submerged).
@@ -233,19 +236,17 @@ export default function Whale({
   useFrame((state) => {
     const g = group.current;
     if (!g) return;
-    if (activeRef.current === null) {
-      const forced =
-        typeof window !== "undefined" &&
-        new URLSearchParams(window.location.search).get("whale") === "1";
-      activeRef.current = forced || Math.random() < 0.05;
-    }
+    if (activeRef.current === null) activeRef.current = true; // breaches on every load now
     const active = activeRef.current;
     if (!active) return;
     const t = state.clock.elapsedTime;
-    // first whale frame fires as the Canvas mounts; hold the leap a beat so the
-    // terrain has streamed in and the scene has settled before the rare moment
+    // first whale frame fires as the Canvas mounts; hold the first leap a beat so
+    // the terrain has streamed in and the scene has settled, then loop forever
     if (startAt.current === null) startAt.current = t + 6.0;
-    let tb = t - startAt.current; // breach-relative seconds
+    const elapsed = t - startAt.current;
+    // breach-relative seconds: negative until the first leap, then cycles every
+    // BREACH_PERIOD so the whale breaches again and again (~once every 30s)
+    let tb = elapsed < 0 ? elapsed : elapsed % BREACH_PERIOD;
     // DEV-ONLY tuning freeze: ?whalefreeze=<seconds> pins breach-relative time
     if (typeof window !== "undefined") {
       const fz = new URLSearchParams(window.location.search).get("whalefreeze");
