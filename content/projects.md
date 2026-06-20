@@ -1,7 +1,7 @@
 ---
 title: Projects
 station: STN 46012
-established: est. 2024 · Half Moon Bay
+established: ""
 location: 37.36°N 122.88°W
 report: "Projects · 3 active stations · all reporting"
 surfCam:

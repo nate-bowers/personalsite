@@ -21,7 +21,7 @@ type V3 = [number, number, number];
 const SPOTS = {
   hoover: { lng: -122.283, lat: 37.41 }, // in front of the stadium and centered on its exposed near corner
   campanile: { lng: -122.235, lat: 37.858 }, // a little southeast
-  levis: { lng: -122.22, lat: 37.43 }, // moved south (toward camera) onto open flats for max visibility, clear of Hoover behind
+  levis: { lng: -122.19, lat: 37.43 }, // nudged east off Hoover (which sits just west) so the two don't stack on screen
   transamerica: { lng: -122.4028, lat: 37.775 }, // a little south of its real spot
 };
 
@@ -31,22 +31,10 @@ export default function Landmarks({ data }: { data: TerrainData }) {
       const [x, z] = lngLatToScene(data.meta, lng, lat);
       return [x, Math.max(0, terrainYAtScene(data, x, z)), z];
     };
-    // The stadium has a wide flat footprint; seat its base on the HIGHEST point
-    // beneath that footprint so the bowl never sinks into a rise on one side.
-    const groundMax = (lng: number, lat: number, r: number): V3 => {
-      const [x, z] = lngLatToScene(data.meta, lng, lat);
-      let y = terrainYAtScene(data, x, z);
-      for (let a = 0; a < Math.PI * 2 - 0.01; a += Math.PI / 4) {
-        for (const rr of [r * 0.6, r]) {
-          y = Math.max(y, terrainYAtScene(data, x + Math.cos(a) * rr, z + Math.sin(a) * rr));
-        }
-      }
-      return [x, Math.max(0, y), z];
-    };
     return {
       hoover: ground(SPOTS.hoover.lng, SPOTS.hoover.lat),
       campanile: ground(SPOTS.campanile.lng, SPOTS.campanile.lat),
-      levis: groundMax(SPOTS.levis.lng, SPOTS.levis.lat, 1.4),
+      levis: ground(SPOTS.levis.lng, SPOTS.levis.lat),
       transamerica: ground(SPOTS.transamerica.lng, SPOTS.transamerica.lat),
     };
   }, [data]);

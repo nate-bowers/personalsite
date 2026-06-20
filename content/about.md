@@ -1,7 +1,7 @@
 ---
 title: About
 station: STN 2004
-established: est. 2004 · Bay Area
+established: ""
 location: 37.77°N 122.42°W
 report: "About · one station · reporting"
 surfCam:

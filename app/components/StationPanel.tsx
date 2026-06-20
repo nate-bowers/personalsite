@@ -126,8 +126,9 @@ export default function StationPanel({ content }: { content: StationContent }) {
               {content.title}
             </h2>
             <p className="font-mono mt-2 text-[11px]" style={{ color: "var(--panel-muted)" }}>
-              {content.established}
-              {content.location && content.location !== "—" ? ` · ${content.location}` : ""}
+              {[content.established, content.location && content.location !== "—" ? content.location : ""]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           </div>
           <button
