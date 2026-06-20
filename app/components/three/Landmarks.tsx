@@ -21,7 +21,7 @@ type V3 = [number, number, number];
 const SPOTS = {
   hoover: { lng: -122.283, lat: 37.41 }, // in front of the stadium and centered on its exposed near corner
   campanile: { lng: -122.235, lat: 37.858 }, // a little southeast
-  levis: { lng: -122.02, lat: 37.43 }, // nudged well east off Hoover (which sits just west) so the two don't stack on screen
+  levis: { lng: -122.02, lat: 37.48 }, // nudged well east off Hoover (which sits just west) so the two don't stack on screen; pulled 0.05° north
   transamerica: { lng: -122.4028, lat: 37.775 }, // a little south of its real spot
 };
 
