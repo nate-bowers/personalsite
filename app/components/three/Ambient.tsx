@@ -57,7 +57,7 @@ function Jet() {
     return g;
   }, []);
 
-  // tiny jet: fuselage + wings merged visually by proximity (2 meshes)
+  // tiny jet: fuselage + wings + tail surfaces, positioned/animated as one group
   useFrame((state) => {
     const g = group.current;
     if (!g) return;
@@ -70,12 +70,25 @@ function Jet() {
 
   return (
     <group ref={group} scale={2.2}>
+      {/* fuselage — capsule laid along the flight axis (+X = nose) */}
       <mesh rotation={[0, 0, Math.PI / 2]}>
-        <capsuleGeometry args={[0.022, 0.16, 3, 6]} />
+        <capsuleGeometry args={[0.024, 0.17, 3, 6]} />
         <meshStandardMaterial color="#efeae0" roughness={0.5} emissive="#efeae0" emissiveIntensity={0.5} />
       </mesh>
-      <mesh>
-        <boxGeometry args={[0.05, 0.008, 0.22]} />
+      {/* main wings — a wide, thicker plank so the plane clearly reads as winged
+          against the bright sky (the old wing was too thin/short to see) */}
+      <mesh position={[0.01, 0, 0]}>
+        <boxGeometry args={[0.13, 0.02, 0.46]} />
+        <meshStandardMaterial color="#e6e0d4" roughness={0.6} emissive="#e6e0d4" emissiveIntensity={0.5} />
+      </mesh>
+      {/* horizontal tailplane at the tail */}
+      <mesh position={[-0.085, 0, 0]}>
+        <boxGeometry args={[0.06, 0.016, 0.2]} />
+        <meshStandardMaterial color="#e6e0d4" roughness={0.6} emissive="#e6e0d4" emissiveIntensity={0.5} />
+      </mesh>
+      {/* vertical stabilizer (tail fin) — sells the airplane silhouette */}
+      <mesh position={[-0.088, 0.045, 0]}>
+        <boxGeometry args={[0.06, 0.08, 0.014]} />
         <meshStandardMaterial color="#e6e0d4" roughness={0.6} emissive="#e6e0d4" emissiveIntensity={0.5} />
       </mesh>
       <mesh geometry={trailGeo}>
