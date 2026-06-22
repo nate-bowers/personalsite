@@ -384,7 +384,7 @@ function LinkRow({ links }: { links: { label: string; href: string }[] }) {
 function ContactLinks({ links }: { links: { label: string; href: string }[] }) {
   return (
     <ul
-      className="group/list mt-6 flex min-h-[60vh] flex-col"
+      className="mt-6 flex min-h-[60vh] flex-col"
       style={{ borderBottom: "1px solid var(--panel-line)" }}
     >
       {links.map((l) => {
@@ -396,7 +396,7 @@ function ContactLinks({ links }: { links: { label: string; href: string }[] }) {
               href={l.href}
               target={external ? "_blank" : undefined}
               rel={external ? "noopener noreferrer" : undefined}
-              className="group/row flex h-full items-center gap-5 rounded-md px-1 transition-opacity duration-300 group-hover/list:opacity-40 hover:!opacity-100 focus-visible:!opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent)] motion-safe:transition-[opacity,transform] motion-safe:hover:translate-x-1.5"
+              className="group/row flex h-full items-center gap-5 rounded-md px-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent)] motion-safe:transition-transform motion-safe:hover:translate-x-1.5"
               style={{ color: "var(--accent)" }}
             >
               {icon ? (
