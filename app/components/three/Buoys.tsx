@@ -179,7 +179,7 @@ function OneBuoy({
           onPointerDown={warm}
           onPointerEnter={warm}
           onClick={openPanel}
-          aria-label={`Open ${LABELS[anchor.slug] ?? anchor.label} — station ${anchor.place}`}
+          aria-label={`Open ${LABELS[anchor.slug] ?? anchor.label}, station ${anchor.place}`}
           className="buoy3d-label font-mono cursor-pointer whitespace-nowrap rounded-full px-1.5 py-0.5 text-[9px] uppercase tracking-tight sm:px-2 sm:text-[11px] sm:tracking-wide"
           style={{
             background: "color-mix(in srgb, var(--panel-bg) 82%, transparent)",

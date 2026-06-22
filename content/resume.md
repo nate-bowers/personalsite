@@ -6,7 +6,7 @@ location: "—"
 report: "Resume · on file · current"
 surfCam:
   label: "Steamer Lane cam"
-  href: "https://www.surfline.com/surf-report/steamer-lane/5842041f4e65fad6a7708841"
+  href: "https://www.surfline.com/surf-report/steamer-lane/5842041f4e65fad6a7708805"
 pdf: /resume.pdf
 ---
 

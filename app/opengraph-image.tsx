@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const alt =
-  "Nate Bowers — Portfolio: a live 3D model of the Northern California coast, driven by NOAA buoy data";
+  "Nate Bowers's portfolio: a live 3D model of the Northern California coast, driven by NOAA buoy data";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

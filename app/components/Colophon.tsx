@@ -174,14 +174,14 @@ export default function Colophon() {
               </p>
               <ul className="space-y-1.5">
                 <li>
-                  <strong>Full</strong> — the complete 3D scene on a WebGL2 desktop.
+                  <strong>Full</strong>: the complete 3D scene on a WebGL2 desktop.
                 </li>
                 <li>
-                  <strong>Calm</strong> — a lighter tier on phones and weaker machines:
+                  <strong>Calm</strong>: a lighter tier on phones and weaker machines,
                   fewer trees, lower resolution, the same place.
                 </li>
                 <li>
-                  <strong>Still</strong> — a static image of the same coast when there&apos;s
+                  <strong>Still</strong>: a static image of the same coast when there&apos;s
                   no WebGL2, with a quiet &ldquo;load the interactive version&rdquo; opt-in.
                 </li>
               </ul>

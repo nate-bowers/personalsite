@@ -33,7 +33,7 @@ export default function Buoy({
       data-slug={def.slug}
       onPointerDown={() => router.prefetch(`/${def.slug}`)}
       onClick={() => router.push(`/${def.slug}`)}
-      aria-label={`Open ${def.label} — station ${def.station}`}
+      aria-label={`Open ${def.label}, station ${def.station}`}
       className={`buoy group pointer-events-auto flex cursor-pointer flex-col items-center transition-transform duration-200 hover:-translate-y-1 ${className}`}
       style={style}
     >

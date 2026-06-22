@@ -4,7 +4,7 @@ import { getStation } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Ask Nate",
-  description: "Station 0000 — a retrieval-augmented agent you can ask about my background. Deploying soon.",
+  description: "Station 0000, a retrieval-augmented agent you can ask about my background. Deploying soon.",
 };
 
 // Intentionally live-but-hidden: the Ask buoy + nav are gated off by
