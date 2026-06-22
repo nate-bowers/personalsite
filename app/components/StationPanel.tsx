@@ -373,34 +373,48 @@ function LinkRow({ links }: { links: { label: string; href: string }[] }) {
 }
 
 /**
- * Contact methods as a vertical list, each row led by its brand glyph (email,
- * GitHub, LinkedIn, X). Same panel tokens and accent-link convention as LinkRow,
- * just stacked and icon-led — used only for the Contact station.
+ * Contact methods as a tall board that fills the panel: each method is a
+ * full-width row (brand glyph · large label · mono handle) split by hairlines
+ * and sized to divide the height evenly. Hovering one row brings it forward —
+ * it grows and brightens while the others recede — so the eye always has a
+ * single focus. Same panel tokens and accent-link convention as the rest of
+ * the station; the grow/slide motion is gated behind `motion-safe`, so
+ * reduced-motion visitors get the static board. Used only for the Contact station.
  */
 function ContactLinks({ links }: { links: { label: string; href: string }[] }) {
   return (
-    <ul className="mt-5 flex flex-col items-start gap-2.5">
+    <ul
+      className="group/list mt-6 flex min-h-[60vh] flex-col"
+      style={{ borderBottom: "1px solid var(--panel-line)" }}
+    >
       {links.map((l) => {
         const external = l.href.startsWith("http");
         const icon = CONTACT_ICONS[contactKind(l.href)];
         return (
-          <li key={l.href}>
+          <li key={l.href} className="flex-1" style={{ borderTop: "1px solid var(--panel-line)" }}>
             <a
               href={l.href}
               target={external ? "_blank" : undefined}
               rel={external ? "noopener noreferrer" : undefined}
-              className="group inline-flex items-center gap-3 rounded-md border px-3.5 py-2.5 transition-colors hover:border-current"
-              style={{ borderColor: "var(--panel-line)", color: "var(--accent)" }}
+              className="group/row flex h-full items-center gap-5 rounded-md px-1 transition-opacity duration-300 group-hover/list:opacity-40 hover:!opacity-100 focus-visible:!opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent)] motion-safe:transition-[opacity,transform] motion-safe:hover:translate-x-1.5"
+              style={{ color: "var(--accent)" }}
             >
               {icon ? (
-                <span className="shrink-0" aria-hidden>
+                <span className="shrink-0 [&>svg]:h-6 [&>svg]:w-6" aria-hidden>
                   {icon}
                 </span>
               ) : null}
-              <span className="font-mono text-sm">{l.label}</span>
+              <span className="flex min-w-0 flex-col gap-1">
+                <span className="origin-left text-3xl leading-none transition-transform duration-300 motion-safe:group-hover/row:scale-[1.08] sm:text-4xl">
+                  {l.label}
+                </span>
+                <span className="font-mono truncate text-xs" style={{ color: "var(--panel-muted)" }}>
+                  {contactDetail(l.href)}
+                </span>
+              </span>
               {external ? (
                 <span
-                  className="font-mono text-xs opacity-60 transition-transform group-hover:translate-x-0.5"
+                  className="font-mono ml-auto shrink-0 text-sm opacity-60 transition-transform duration-300 motion-safe:group-hover/row:translate-x-1"
                   aria-hidden
                 >
                   ↗
@@ -412,6 +426,12 @@ function ContactLinks({ links }: { links: { label: string; href: string }[] }) {
       })}
     </ul>
   );
+}
+
+/** Human-readable handle for a contact href: drop the mailto:/protocol and any www. */
+function contactDetail(href: string): string {
+  if (href.startsWith("mailto:")) return href.slice(7);
+  return href.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
 }
 
 /** Map a contact href to its brand-glyph key. */
