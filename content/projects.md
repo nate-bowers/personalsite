@@ -10,10 +10,9 @@ surfCam:
 projects:
   - name: Huberman GPT
     date: June 2026
-    tagline: "Ask a general chatbot about Huberman's protocols and it will confidently invent half of them. Huberman GPT only answers from what he has actually said — 342 episodes, ~800 hours, 7.3M words — fusing semantic and keyword search so every claim cites the exact moment in the video."
+    tagline: "Ask a general chatbot about Huberman's protocols and it will confidently invent half of them. Huberman GPT only answers from what he has actually said, fusing semantic and keyword search so every claim cites the exact moment in the video."
     stack: ["Next.js", "TypeScript", "RAG", "Supabase (pgvector)", "Hybrid Search", "Groq", "Vercel"]
     metrics:
-      - "342 episodes · ~800 hours · 7.3M words"
       - "Hybrid retrieval (semantic + keyword) fused with RRF"
       - "Finds a relevant source ~99% of the time (LLM-judge eval, 100 questions)"
       - "Citations deep-link to the timestamp; runs on free tiers"
