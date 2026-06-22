@@ -20,9 +20,11 @@ import CoastScene from "./CoastScene";
 export default function CoastBackground({
   conditions,
   onUnavailable,
+  onPerfFail,
 }: {
   conditions: Conditions;
   onUnavailable?: () => void;
+  onPerfFail?: () => void;
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<TerrainData | null>(null);
@@ -102,6 +104,7 @@ export default function CoastBackground({
             conditions={conditions}
             eventSource={wrapperRef}
             onReady={() => setReady(true)}
+            onPerfFail={onPerfFail}
           />
         )}
       </div>

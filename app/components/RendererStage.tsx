@@ -85,10 +85,15 @@ export default function RendererStage({
   // Manual opt-in from the static tier: a visitor whose device CAN run WebGL2 but
   // landed on static (slow first load, or reduced-motion) can ask for the scene.
   const [forceScene, setForceScene] = useState(false);
+  // The performance governor (FpsGovernor) couldn't hold a usable frame rate even
+  // after dropping DPR + calm geometry → a distinct, one-way latch to the static
+  // image. Separate from sceneFailed so the static tier can explain WHY, and so
+  // forceScene can't re-enter a scene this device has already proven it can't run.
+  const [perfFailed, setPerfFailed] = useState(false);
   const tier: RenderTier =
-    forceScene && detected.webgl2 && !sceneFailed
+    forceScene && detected.webgl2 && !sceneFailed && !perfFailed
       ? "scene"
-      : sceneFailed && detected.tier === "scene"
+      : (sceneFailed || perfFailed) && detected.tier === "scene"
         ? "static"
         : detected.tier;
   const state: RenderState = { ...detected, tier };
@@ -106,8 +111,9 @@ export default function RendererStage({
           If the device can actually run WebGL2, offer to load the live scene. */}
       {tier === "static" && (
         <StaticCoast
+          reason={perfFailed ? "perf" : undefined}
           onEnter={
-            detected.webgl2
+            detected.webgl2 && !perfFailed
               ? () => {
                   setSceneFailed(false);
                   setForceScene(true);
@@ -119,7 +125,11 @@ export default function RendererStage({
       {/* z-0 wrapper (owned by CoastBackground) so the canvas receives pointer
           events; the chrome (nav z-15, header z-20, panel z-30) stays above it. */}
       {tier === "scene" && (
-        <CoastBackground conditions={conditions} onUnavailable={() => setSceneFailed(true)} />
+        <CoastBackground
+          conditions={conditions}
+          onUnavailable={() => setSceneFailed(true)}
+          onPerfFail={() => setPerfFailed(true)}
+        />
       )}
       {tier === "loading" && <Establishing />}
       {children}

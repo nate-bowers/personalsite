@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, type RefObject } from "react";
+import { useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import type { Conditions } from "@/lib/ndbc";
@@ -24,6 +24,7 @@ import Ambient from "./Ambient";
 import Whale from "./Whale";
 import Ship from "./Ship";
 import CameraRig from "./CameraRig";
+import FpsGovernor from "./FpsGovernor";
 
 // Replace three's fog with the shared height fog before any material compiles.
 installHeightFog();
@@ -58,18 +59,24 @@ export default function CoastScene({
   conditions,
   eventSource,
   onReady,
+  onPerfFail,
 }: {
   data: TerrainData;
   far: FarData | null;
   conditions: Conditions;
   eventSource?: RefObject<HTMLElement | null>;
   onReady: () => void;
+  onPerfFail?: () => void;
 }) {
   // Real-bathymetry swell exposure — shared by the water mesh, buoys and ferry.
   const openness = useMemo(() => computeOpenness(data), [data]);
   // calm = the perf tier (mobile / small screens, or the "calmer seas" toggle):
-  // lower DPR cap and no post-processing.
+  // lower DPR cap and no post-processing. NOTE: the Canvas `dpr` below is only a
+  // per-tier CEILING — FpsGovernor owns the actual device pixel ratio post-mount.
   const calm = useQuality() === "calm";
+  // First-frames-presented gate for the FpsGovernor's warm-up (separate from the
+  // parent onReady so the governor starts measuring only once the scene is live).
+  const [ready, setReady] = useState(false);
 
   return (
     <Canvas
@@ -79,8 +86,10 @@ export default function CoastScene({
       dpr={calm ? [1, 1.25] : [1, 1.75]}
       gl={{ antialias: true }}
       onCreated={(state) => {
-        // debug hook for the visual-verification loop
-        (window as unknown as Record<string, unknown>).__r3f_state = state;
+        // debug hook for the visual-verification loop (dev only)
+        if (process.env.NODE_ENV !== "production") {
+          (window as unknown as Record<string, unknown>).__r3f_state = state;
+        }
       }}
     >
       {/* fogExp2 turns USE_FOG on for standard materials; the patched chunks
@@ -108,7 +117,13 @@ export default function CoastScene({
       <Ship data={data} conditions={conditions} openness={openness} />
       <Whale data={data} conditions={conditions} openness={openness} />
       <CameraRig anchors={data.anchors} />
-      <ReadySignal onReady={onReady} />
+      <ReadySignal
+        onReady={() => {
+          setReady(true);
+          onReady();
+        }}
+      />
+      <FpsGovernor ready={ready} onEscalate={onPerfFail} />
       {/* Bloom IS the golden-hour glow — it diffuses the bright sun/sky into soft
           haze; without it the orange sky reads as a hard red fireball. So it runs
           on EVERY tier. The calm savings come from DPR + geometry, not from

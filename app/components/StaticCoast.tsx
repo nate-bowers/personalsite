@@ -11,8 +11,18 @@
  * `onEnter` is provided only when the device actually has WebGL2 (so it landed
  * here via a slow first load or reduced-motion, not a hard incapability): we
  * surface a button to load the live, interactive scene on demand.
+ *
+ * `reason="perf"` means the live scene ran, but the performance governor could
+ * not hold a usable frame rate even after degrading — so we state that honestly
+ * (and never offer the re-enter button, which would just fail again).
  */
-export default function StaticCoast({ onEnter }: { onEnter?: () => void }) {
+export default function StaticCoast({
+  onEnter,
+  reason,
+}: {
+  onEnter?: () => void;
+  reason?: "perf";
+}) {
   return (
     <>
       <div className="fixed inset-0 z-0" aria-hidden>
@@ -39,6 +49,14 @@ export default function StaticCoast({ onEnter }: { onEnter?: () => void }) {
         >
           ▸ Load the interactive version
         </button>
+      ) : reason === "perf" ? (
+        <p
+          role="status"
+          className="fixed bottom-16 left-1/2 z-[16] max-w-[88vw] -translate-x-1/2 whitespace-normal rounded-full px-4 py-2 text-center text-[12px] leading-snug shadow-lg"
+          style={{ background: "rgba(35,26,51,0.9)", color: "var(--ink)" }}
+        >
+          This device couldn&apos;t hold the live scene smoothly. Showing the still coast.
+        </p>
       ) : null}
     </>
   );

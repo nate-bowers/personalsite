@@ -5,6 +5,7 @@ import { useThree, useFrame } from "@react-three/fiber";
 import { usePathname } from "next/navigation";
 import * as THREE from "three";
 import type { Anchor } from "@/lib/terrain";
+import { setCameraFlying } from "@/lib/camera-bus";
 
 /**
  * The camera is on rails — no free-look (DESIGN-PHASE2.md §3). Default shot:
@@ -63,6 +64,13 @@ export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
   const desiredPos = useRef(new THREE.Vector3());
   const desiredLook = useRef(new THREE.Vector3());
   const look = useRef(HOME_LOOK.clone());
+  // A route change starts a fly; FpsGovernor freezes escalation while flying so a
+  // Tier-B geometry rebuild can't land as a mid-flight stall. Cleared on arrival.
+  const flying = useRef(false);
+  useEffect(() => {
+    flying.current = true;
+    setCameraFlying(true);
+  }, [slug]);
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
@@ -91,6 +99,18 @@ export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
     camera.position.lerp(desiredPos.current, k);
     look.current.lerp(desiredLook.current, k);
     camera.lookAt(look.current);
+
+    // The fly is "done" once the camera has essentially reached its target; clear
+    // the flying flag so the governor can resume (the camera-bus also self-expires
+    // after a watchdog window, so a missed clear can never wedge the governor).
+    if (
+      flying.current &&
+      camera.position.distanceTo(desiredPos.current) < 0.25 &&
+      look.current.distanceTo(desiredLook.current) < 0.25
+    ) {
+      flying.current = false;
+      setCameraFlying(false);
+    }
   });
 
   return null;

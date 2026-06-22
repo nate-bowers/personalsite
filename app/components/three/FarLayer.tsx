@@ -261,6 +261,7 @@ function FarTrees({ data, far }: { data: TerrainData; far: FarData }) {
 const FIELD_COLORS = ["#c8ab47", "#5f8a3e", "#96713f", "#a8b052", "#d3b65e", "#4e7c3a"];
 
 function FarmFields({ data, far }: { data: TerrainData; far: FarData }) {
+  const quality = useQuality();
   const geometry = useMemo(() => {
     const g = new THREE.PlaneGeometry(1, 1);
     g.rotateX(-Math.PI / 2);
@@ -283,9 +284,12 @@ function FarmFields({ data, far }: { data: TerrainData; far: FarData }) {
     const out: { pos: [number, number, number]; sx: number; sz: number; rotY: number; color: THREE.Color }[] = [];
     const c = new THREE.Color();
     // jittered grid over the valley: dried Suisun/Delta flats through the
-    // San Joaquin, east of the Diablo ridge, fading before the foothills
-    for (let gx = 6.4; gx < 27; gx += 0.62) {
-      for (let gz = -19; gz < 9; gz += 0.46) {
+    // San Joaquin, east of the Diablo ridge, fading before the foothills.
+    // calm coarsens the grid (~½ the fields) so Tier B is a real GPU lever here.
+    const stepX = quality === "calm" ? 0.93 : 0.62;
+    const stepZ = quality === "calm" ? 0.69 : 0.46;
+    for (let gx = 6.4; gx < 27; gx += stepX) {
+      for (let gz = -19; gz < 9; gz += stepZ) {
         const x = gx + (rng() - 0.5) * 0.3;
         const z = gz + (rng() - 0.5) * 0.24;
         const e = ground(x, z);
@@ -307,7 +311,7 @@ function FarmFields({ data, far }: { data: TerrainData; far: FarData }) {
       }
     }
     return out;
-  }, [data, far]);
+  }, [data, far, quality]);
 
   const ref = useRef<THREE.InstancedMesh>(null);
   useLayoutEffect(() => {
@@ -356,6 +360,7 @@ const US101: [number, number][] = [
 ];
 
 function Highway({ data, far }: { data: TerrainData; far: FarData }) {
+  const quality = useQuality();
   const geometry = useMemo(() => {
     const { meta } = data;
     const halfW = meta.sceneWidth / 2;
@@ -389,7 +394,7 @@ function Highway({ data, far }: { data: TerrainData; far: FarData }) {
       return new THREE.Vector3(x, 0, z);
     });
     const curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.4);
-    const N = 420;
+    const N = quality === "calm" ? 240 : 420;
     const HALF_W = 0.038;
     const verts = new Float32Array((N + 1) * 2 * 3);
     const idx: number[] = [];
@@ -421,7 +426,7 @@ function Highway({ data, far }: { data: TerrainData; far: FarData }) {
     geo.setIndex(idx);
     geo.computeVertexNormals();
     return geo;
-  }, [data, far]);
+  }, [data, far, quality]);
 
   return (
     <mesh geometry={geometry}>
