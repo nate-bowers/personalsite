@@ -28,10 +28,9 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
-// Canonical absolute URL for metadata + OG image (link previews). Falls back to
-// the live production domain; override with NEXT_PUBLIC_SITE_URL once a custom
-// domain is attached.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://personalsite-one-zeta.vercel.app";
+// Canonical absolute URL for metadata + OG image (link previews). Defaults to the
+// live custom domain; NEXT_PUBLIC_SITE_URL (set in the Vercel project) overrides.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://natebowers.dev";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

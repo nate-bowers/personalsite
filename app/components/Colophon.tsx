@@ -194,7 +194,7 @@ export default function Colophon() {
               <ul className="space-y-2">
                 <li>
                   A <strong>humpback whale</strong> breaches near the offshore buoy on
-                  roughly 1 in 20 loads. Force it with <Mono>?whale=1</Mono>.
+                  every load, then again about every 30 seconds.
                 </li>
                 <li>
                   A <strong>container ship</strong> crosses the far offshore shipping lane.
@@ -210,8 +210,8 @@ export default function Colophon() {
                   Each station panel carries a live <strong>surf-cam</strong> link.
                 </li>
                 <li>
-                  <strong>Number keys</strong> fly the camera: <Mono>1</Mono>&ndash;
-                  <Mono>5</Mono> for the buoys, <Mono>0</Mono> to return home.
+                  <strong>Number keys</strong> fly the camera to each buoy;{" "}
+                  <Mono>0</Mono> returns home.
                 </li>
                 <li>
                   A <strong>&ldquo;calmer seas&rdquo;</strong> toggle drops the graphics tier

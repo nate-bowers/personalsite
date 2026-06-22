@@ -16,7 +16,7 @@ async function fetchStation(id: string): Promise<string | null> {
       signal: controller.signal,
       // Buoys report ~hourly; 30 min cache. See DESIGN.md §4.
       next: { revalidate: 1800 },
-      headers: { "User-Agent": "the-lineup/1.0 (personal portfolio)" },
+      headers: { "User-Agent": "the-coast/1.0 (natebowers.dev)" },
     });
     if (!res.ok) return null;
     return await res.text();

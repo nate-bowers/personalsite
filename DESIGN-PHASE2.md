@@ -56,7 +56,7 @@ Each buoy gets a small mono label as before (always visible, clarity rules apply
 
 **Clarity rules carry over hard:** all five buoys visible from the default shot, labels always on, one click verb, the index nav remains and now also triggers the camera moves. Browser back closes panel and returns camera.
 
-**Reduced motion / weak devices (revised — the v1 2D ocean is retired):** one scene, three fidelity tiers. Full 3D on WebGL2 desktops; degraded-live 3D ("calm" quality — fewer trees/segments, no bloom, low DPR) on phones and narrow viewports; and a **static still image of the same coast** (`StaticCoast`, with DOM buoys) for no-WebGL2 **or** prefers-reduced-motion, plus as the safety-net when the scene fails to present within ~8s. Non-negotiable: every visitor sees the coast — recruiters on locked-down laptops get it as an image, never a different ocean.
+**Reduced motion / weak devices (revised — the v1 2D ocean is retired):** one scene, three fidelity tiers. Full 3D on WebGL2 desktops; degraded-live 3D ("calm" quality — fewer trees/segments, low DPR; bloom stays on every tier — it carries the golden-hour glow, without it the sky reads as a hard red fireball) on phones and narrow viewports; and a **static still image of the same coast** (`StaticCoast`, with DOM buoys) for no-WebGL2 **or** prefers-reduced-motion, plus as the safety-net when the scene fails to present within ~8s. Non-negotiable: every visitor sees the coast — recruiters on locked-down laptops get it as an image, never a different ocean.
 
 ---
 
@@ -88,7 +88,7 @@ Performance budget: under 150k triangles in frame, one drawcall-heavy enemy (ter
 Terrain pipeline script, heightmap rendered with golden-hour material and fog layers, Gerstner water plane driven by live conditions, sun + glitter, default camera shot with ambient drift. No interaction yet beyond the existing index nav opening panels the v1 way. DoD: a screenshot of the default shot looks like a poster you'd hang up.
 
 ### Phase 2b — The flight (1 to 2 weekends)
-Five buoy models placed at spots, wave-coupled bobbing, click targets with labels, camera rail system, panel redesign to the 40% side sheet, fallback renderer switch (2D ocean for reduced-motion/weak devices/mobile). DoD: full click-fly-read-close loop on all five buoys, back button correct, fallback verified by forcing it.
+Five buoy models placed at spots, wave-coupled bobbing, click targets with labels, camera rail system, panel redesign to the 40% side sheet, fallback renderer switch (static still image for reduced-motion/weak devices/mobile). DoD: full click-fly-read-close loop on all five buoys, back button correct, fallback verified by forcing it.
 
 ### Phase 2c — The polish (1 weekend)
 Place-name labels on terrain, sun glitter tuning, bloom pass, loading sequence (conditions readout types in while the scene streams), new OG image from the actual scene, performance pass with real device testing. DoD: Lighthouse performance 85+ desktop, the QA checklist from v1 rerun in full.

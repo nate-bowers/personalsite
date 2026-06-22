@@ -3,7 +3,7 @@ title: Projects
 station: STN 46012
 established: ""
 location: 37.36°N 122.88°W
-report: "Projects · 3 active stations · all reporting"
+report: "Projects · 3 active projects · all reporting"
 surfCam:
   label: "Mavericks cam"
   href: "https://www.surfline.com/surf-report/mavericks/5842041f4e65fad6a7708890"

@@ -15,5 +15,5 @@ I haven't built this one yet. Here's what it's going to be.
 Station 0000 will be an agent you can ask about my background, projects, and decisions.
 It answers from real documents and cites them, so you can check the source.
 
-Until it's live, the other four stations are reporting, and you can reach me from the
-Contact buoy.
+Until it's live, the About, Projects, Resume, and Contact stations are all reporting,
+and you can reach me from the Contact buoy.

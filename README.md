@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# The Coast — Nate Bowers' portfolio
 
-## Getting Started
+A portfolio that **is** a live 3D model of the Northern California coast — Stinson
+Beach to Big Sur — rendered from real USGS elevation data at permanent golden
+hour, with the ocean driven by a live NOAA buoy. Each content section is a
+NOAA-style buoy anchored at a real surf spot; clicking one flies the rail-mounted
+camera down to it and opens a station-report panel.
 
-First, run the development server:
+Live: **[natebowers.dev](https://natebowers.dev)**
+
+## Stack
+
+- **Next.js** (App Router) + **TypeScript**
+- **three.js** · **@react-three/fiber** · **drei** · **@react-three/postprocessing** — the 3D coast
+- **Tailwind** for layout, CSS variables for the locked golden-hour palette
+- **Framer Motion** (`motion`) for the station panels
+- Live ocean from **NOAA NDBC** buoy data via `/api/conditions` (fallback chain 46012 → 46026 → 46042 → defaults)
+- Terrain built offline from AWS Terrarium tiles into an int16 heightmap committed under `public/terrain/`
+- Deployed on **Vercel**
+
+The scene runs one coast at three fidelity tiers — **full** 3D, **calm** 3D
+(phones / weak machines, also driven at runtime by an FPS governor), and a
+**static image** of the same coast (no-WebGL2 / reduced-motion). It never swaps
+in a different renderer.
+
+## Commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm dev            # local dev server
+pnpm build          # production build
+pnpm start          # serve the production build
+pnpm build:terrain  # rebuild the committed heightmap from Terrarium tiles
+pnpm test           # vitest (unit)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Layout
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+app/                Next.js App Router (routes, layout, OG image, robots/sitemap)
+app/components/     UI + the three/ scene components
+lib/                terrain, NOAA conditions, Gerstner waves, quality tiers
+content/*.md        station-panel content (frontmatter + prose)
+scripts/build-terrain.mjs   offline terrain pipeline
+public/terrain/     committed int16 heightmap
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Design
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The art direction and engineering rules are canonical in **`DESIGN-PHASE2.md`**
+(and enforced by the `lineup-design-system` skill). **`CLAUDE.md`** is the
+working brief for agents. Golden hour is locked; the geography and data are real.
