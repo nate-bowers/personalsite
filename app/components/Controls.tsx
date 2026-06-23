@@ -13,7 +13,7 @@ export default function Controls() {
 
   return (
     <div
-      className="fixed bottom-4 right-4 z-40 rounded-lg p-3"
+      className="fixed bottom-14 left-4 z-40 rounded-lg p-3"
       style={{
         background: "rgba(22,17,30,0.6)",
         color: "var(--ink)",
