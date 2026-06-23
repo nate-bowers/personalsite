@@ -1,42 +1,39 @@
+/* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
+export const runtime = "nodejs";
 export const alt =
   "Nate Bowers's portfolio: a live 3D model of the Northern California coast, driven by NOAA buoy data";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Static OG image of the day-palette sea with the name and the live-data line.
-export default function OpengraphImage() {
+// OG card: a still of the actual coast scene (the static-tier render) with the
+// name and the live-NOAA line over it. No tagline.
+export default async function OpengraphImage() {
+  const photo = await readFile(join(process.cwd(), "public", "coast-fallback.jpg"));
+  const src = `data:image/jpeg;base64,${photo.toString("base64")}`;
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          position: "relative",
-          fontFamily: "serif",
-        }}
-      >
+      <div style={{ width: "100%", height: "100%", display: "flex", position: "relative" }}>
+        <img
+          src={src}
+          width={1200}
+          height={630}
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+        />
+        {/* legibility scrim: darken the top and bottom so the text reads over the photo */}
         <div
           style={{
             position: "absolute",
             top: 0,
             left: 0,
             right: 0,
-            height: "45%",
-            background: "linear-gradient(to bottom, #4A3D6B, #E8895A)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
             bottom: 0,
-            left: 0,
-            right: 0,
-            height: "55%",
-            background: "linear-gradient(to bottom, #2E2A4F, #1E3A52)",
+            display: "flex",
+            background:
+              "linear-gradient(to bottom, rgba(20,17,30,0.5) 0%, rgba(20,17,30,0) 30%, rgba(20,17,30,0) 60%, rgba(20,17,30,0.66) 100%)",
           }}
         />
         <div
@@ -46,14 +43,21 @@ export default function OpengraphImage() {
             flexDirection: "column",
             justifyContent: "space-between",
             height: "100%",
+            width: "100%",
             padding: 64,
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 88, color: "#FBF3E4", lineHeight: 1 }}>Nate Bowers</div>
-            <div style={{ fontSize: 30, color: "#FBF3E4", opacity: 0.85, marginTop: 14, fontFamily: "sans-serif" }}>
-              applied math + econ · builds AI tools
-            </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 92,
+              color: "#FBF3E4",
+              lineHeight: 1,
+              fontFamily: "serif",
+              textShadow: "0 2px 22px rgba(0,0,0,0.55)",
+            }}
+          >
+            Nate Bowers
           </div>
           <div
             style={{
@@ -63,6 +67,7 @@ export default function OpengraphImage() {
               fontFamily: "monospace",
               fontSize: 26,
               color: "#ffffff",
+              textShadow: "0 1px 10px rgba(0,0,0,0.6)",
             }}
           >
             <div style={{ width: 16, height: 16, borderRadius: 16, background: "#FF7847" }} />
