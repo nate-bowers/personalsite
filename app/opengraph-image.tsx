@@ -52,7 +52,7 @@ export default function OpengraphImage() {
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 88, color: "#FBF3E4", lineHeight: 1 }}>Nate Bowers</div>
             <div style={{ fontSize: 30, color: "#FBF3E4", opacity: 0.85, marginTop: 14, fontFamily: "sans-serif" }}>
-              applied math + econ · builds with data
+              applied math + econ · builds AI tools
             </div>
           </div>
           <div
