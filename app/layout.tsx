@@ -7,6 +7,7 @@ import BuoyField from "./components/BuoyField";
 import KeyboardNav from "./components/KeyboardNav";
 import IndexNav from "./components/IndexNav";
 import FirstVisitHint from "./components/FirstVisitHint";
+import { Analytics } from "@vercel/analytics/next";
 import { getConditions } from "@/lib/conditions";
 
 const display = Instrument_Serif({
@@ -115,6 +116,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           {/* Section routes render their station panel here as a fixed overlay. */}
           {children}
         </RendererStage>
+        <Analytics />
       </body>
     </html>
   );
