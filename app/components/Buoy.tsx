@@ -38,7 +38,7 @@ export default function Buoy({
       style={style}
     >
       <span className="buoy-bob flex flex-col items-center" style={{ animationDelay: `${delay}s` }}>
-        <svg width="30" height="42" viewBox="0 0 30 42" aria-hidden className="overflow-visible">
+        <svg width="39" height="55" viewBox="0 0 30 42" aria-hidden className="overflow-visible">
           <circle className="buoy-light" cx="15" cy="5" r="3" fill="var(--accent)" />
           <line x1="15" y1="8" x2="15" y2="17" stroke="var(--accent)" strokeWidth="2" />
           <path

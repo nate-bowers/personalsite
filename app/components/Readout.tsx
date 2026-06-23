@@ -44,7 +44,7 @@ export default function Readout({ conditions }: { conditions: Conditions }) {
       ) : (
         <>
           <p>
-            <span style={{ color: "var(--accent)" }}>{breakName ?? "Live buoy"}</span>
+            <span style={{ color: "var(--ink)" }}>{breakName ?? "Live buoy"}</span>
             {source === "fallback" && <span className="opacity-60"> · fallback</span>}
           </p>
           <p className="mt-0.5">
