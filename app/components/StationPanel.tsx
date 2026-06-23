@@ -397,7 +397,7 @@ function ContactLinks({ links }: { links: { label: string; href: string }[] }) {
               target={external ? "_blank" : undefined}
               rel={external ? "noopener noreferrer" : undefined}
               className="group/row flex h-full items-center gap-5 rounded-md px-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--accent)] motion-safe:transition-transform motion-safe:hover:translate-x-1.5"
-              style={{ color: "var(--accent)" }}
+              style={{ color: "var(--accent-ink)" }}
             >
               {icon ? (
                 <span className="shrink-0 [&>svg]:h-6 [&>svg]:w-6" aria-hidden>
