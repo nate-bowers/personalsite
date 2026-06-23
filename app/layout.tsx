@@ -47,12 +47,26 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: "Nate Bowers",
     type: "website",
+    images: [
+      {
+        url: "/og-card.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Nate Bowers's portfolio: a live 3D model of the Northern California coast, with a buoy for each section",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Nate Bowers · Portfolio",
     description:
       "A live 3D model of the Northern California coast, driven by a real NOAA buoy right now.",
+    images: [
+      {
+        url: "/og-card.jpg",
+        alt: "Nate Bowers's portfolio: a live 3D model of the Northern California coast, with a buoy for each section",
+      },
+    ],
   },
 };
 
