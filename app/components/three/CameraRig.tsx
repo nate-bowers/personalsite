@@ -31,6 +31,12 @@ const HOME_POS_PORTRAIT = HOME_LOOK.clone().add(
 const HOME_LOOK_PORTRAIT = new THREE.Vector3(1.0, 1.0, 1.0);
 const FOV_LANDSCAPE = 50;
 const FOV_PORTRAIT = 64;
+// Adaptive framing: blend the landscape shot → the portrait shot CONTINUOUSLY by
+// aspect ratio, so the in-between "narrow landscape" window sizes (skinnier than
+// desktop, not as tall as a phone) zoom out enough to keep all five buoys in frame
+// instead of falling off a hard landscape/portrait switch.
+const ASPECT_WIDE = 1.6; // at/above this aspect, use the tuned landscape shot unchanged
+const ASPECT_NARROW = 0.6; // at/below this aspect, use the full portrait shot
 
 // Dev-only: ?debugcam=px,py,pz,tx,ty,tz pins the camera for the visual
 // iteration loop (model close-ups). Never active in production builds.
@@ -46,19 +52,25 @@ function debugCam(): { pos: THREE.Vector3; look: THREE.Vector3 } | null {
 export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
-  const portrait = size.height > size.width;
+  const aspect = size.width / Math.max(1, size.height);
+  // 0 = wide-desktop framing, 1 = narrow-portrait framing; continuous in between so
+  // every aspect gets a fitted shot rather than one of two hard-coded extremes.
+  const narrow = Math.min(1, Math.max(0, (ASPECT_WIDE - aspect) / (ASPECT_WIDE - ASPECT_NARROW)));
+  const fov = FOV_LANDSCAPE + (FOV_PORTRAIT - FOV_LANDSCAPE) * narrow;
+  const homePos = useMemo(() => HOME_POS.clone().lerp(HOME_POS_PORTRAIT, narrow), [narrow]);
+  const homeLook = useMemo(() => HOME_LOOK.clone().lerp(HOME_LOOK_PORTRAIT, narrow), [narrow]);
   const pathname = usePathname();
   const slug = pathname.replace(/^\//, "");
   const anchor = anchors.find((a) => a.slug === slug) ?? null;
   const dbg = useMemo(() => debugCam(), []);
 
-  // Widen the FOV on portrait so more of the coast fits the narrow frame.
+  // Widen the FOV as the frame narrows so more of the coast fits.
   /* eslint-disable react-hooks/immutability -- three.js cameras are mutated in place; updateProjectionMatrix() applies the change. */
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
-    cam.fov = portrait ? FOV_PORTRAIT : FOV_LANDSCAPE;
+    cam.fov = fov;
     cam.updateProjectionMatrix();
-  }, [camera, portrait]);
+  }, [camera, fov]);
   /* eslint-enable react-hooks/immutability */
 
   const desiredPos = useRef(new THREE.Vector3());
@@ -85,13 +97,12 @@ export default function CameraRig({ anchors }: { anchors: Anchor[] }) {
       desiredPos.current.set(anchor.x - 1.55, 0.6, anchor.z + 1.3);
       desiredLook.current.set(anchor.x + 0.5, 0.28, anchor.z - 0.45);
     } else {
-      const home = portrait ? HOME_POS_PORTRAIT : HOME_POS;
       desiredPos.current.set(
-        home.x + Math.sin(t * 0.07) * 0.5,
-        home.y + Math.cos(t * 0.05) * 0.25,
-        home.z + Math.sin(t * 0.04) * 0.35,
+        homePos.x + Math.sin(t * 0.07) * 0.5,
+        homePos.y + Math.cos(t * 0.05) * 0.25,
+        homePos.z + Math.sin(t * 0.04) * 0.35,
       );
-      desiredLook.current.copy(portrait ? HOME_LOOK_PORTRAIT : HOME_LOOK);
+      desiredLook.current.copy(homeLook);
     }
     // ~1.8s ease feel; smooth, interruptible, and frame-rate independent
     // (0.045/frame at 60fps, normalized to wall time for 120Hz/30Hz displays)
