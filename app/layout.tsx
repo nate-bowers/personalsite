@@ -80,8 +80,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <h1
                 className="font-display leading-none"
                 style={{
-                  // Deliberate one-off: BLACK (not --ink) for contrast against the bright golden sky.
-                  color: "#000000",
+                  // On-palette near-black (warm dark violet) for contrast against the
+                  // bright golden sky, carried by the warm sun-glow halo behind it.
+                  color: "var(--panel-ink)",
                   fontSize: "clamp(2rem, 7vw, 5rem)",
                   textShadow: "0 2px 18px rgba(255,217,160,0.55)",
                 }}
