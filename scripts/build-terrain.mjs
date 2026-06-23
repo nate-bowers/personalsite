@@ -21,6 +21,7 @@
 import sharp from "sharp";
 import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import path from "node:path";
+import { gzipSync } from "node:zlib";
 
 const Z = 10; // ~122m/px at 37°N — matches the output grid resolution
 const OUT_W = 640; // grid columns (E-W)
@@ -483,6 +484,10 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   await writeFile(path.join(OUT_DIR, "heightmap.bin"), Buffer.from(quantized.buffer));
   await writeFile(path.join(OUT_DIR, "far.bin"), Buffer.from(farQuant.buffer));
+  // Gzipped copies are what the site actually fetches at runtime (lib/terrain.ts);
+  // ~half the bytes on the wire. The raw .bin stays as the fallback.
+  await writeFile(path.join(OUT_DIR, "heightmap.bin.gz"), gzipSync(Buffer.from(quantized.buffer), { level: 9 }));
+  await writeFile(path.join(OUT_DIR, "far.bin.gz"), gzipSync(Buffer.from(farQuant.buffer), { level: 9 }));
   await writeFile(path.join(OUT_DIR, "meta.json"), JSON.stringify(meta, null, 2));
   await writeFile(
     path.join(OUT_DIR, "anchors.json"),

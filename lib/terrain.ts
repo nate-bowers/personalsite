@@ -57,6 +57,30 @@ export interface TerrainData {
   heights: Float32Array;
 }
 
+/**
+ * Fetch a committed binary terrain asset, preferring the gzipped copy
+ * (`<path>.gz`, ~half the bytes) and inflating it in the browser — Vercel does
+ * not auto-compress .bin on the wire. Falls back to the uncompressed file when
+ * DecompressionStream is unavailable or the .gz can't be read, so older WebGL2
+ * browsers still get the live scene. Decoded bytes are identical to the raw .bin.
+ */
+async function fetchBinary(path: string): Promise<ArrayBuffer> {
+  if (typeof DecompressionStream !== "undefined") {
+    try {
+      const res = await fetch(`${path}.gz`);
+      if (res.ok && res.body) {
+        const stream = res.body.pipeThrough(new DecompressionStream("gzip"));
+        return await new Response(stream).arrayBuffer();
+      }
+    } catch {
+      /* fall through to the uncompressed asset */
+    }
+  }
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`terrain: failed to fetch ${path} (${res.status})`);
+  return res.arrayBuffer();
+}
+
 let cache: Promise<TerrainData> | null = null;
 
 export function loadTerrain(): Promise<TerrainData> {
@@ -65,7 +89,7 @@ export function loadTerrain(): Promise<TerrainData> {
       const [meta, anchorsFile, bin] = await Promise.all([
         fetch("/terrain/meta.json").then((r) => r.json()),
         fetch("/terrain/anchors.json").then((r) => r.json()),
-        fetch("/terrain/heightmap.bin").then((r) => r.arrayBuffer()),
+        fetchBinary("/terrain/heightmap.bin"),
       ]);
       const heights = Float32Array.from(new Int16Array(bin));
       return {
@@ -103,7 +127,7 @@ export function loadFarTerrain(): Promise<FarData> {
     farCache = (async () => {
       const [{ meta }, bin] = await Promise.all([
         loadTerrain(),
-        fetch("/terrain/far.bin").then((r) => r.arrayBuffer()),
+        fetchBinary("/terrain/far.bin"),
       ]);
       return { meta, heights: Float32Array.from(new Int16Array(bin)) } as FarData;
     })();
