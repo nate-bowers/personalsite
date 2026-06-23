@@ -82,6 +82,12 @@ export interface Surface {
   normal: [number, number, number];
 }
 
+// Single reused result so the per-frame CPU twin (buoys, ferry, ship, whale, fin)
+// allocates nothing. Every caller reads height/normal immediately and never retains
+// the object or the normal array across another waterSurface() call, and useFrame
+// runs are sequential (single-threaded JS), so one shared instance is safe.
+const SCRATCH: Surface = { height: 0, normal: [0, 0, 0] };
+
 /**
  * CPU twin of the generated shader. `open` is the local open-water factor —
  * pass the value sampled at the same spot the mesh uses or the prop will
@@ -119,5 +125,9 @@ export function waterSurface(
   const wy2 = nlz;
   const wz2 = -nly;
   const m = Math.hypot(wx2, wy2, wz2) || 1;
-  return { height, normal: [wx2 / m, wy2 / m, wz2 / m] };
+  SCRATCH.height = height;
+  SCRATCH.normal[0] = wx2 / m;
+  SCRATCH.normal[1] = wy2 / m;
+  SCRATCH.normal[2] = wz2 / m;
+  return SCRATCH;
 }

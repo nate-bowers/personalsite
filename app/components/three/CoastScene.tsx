@@ -84,7 +84,7 @@ export default function CoastScene({
       eventPrefix="client"
       camera={{ position: [-11.0, 8.0, 7.0], fov: 50, near: 0.1, far: 1400 }}
       dpr={calm ? [1, 1.25] : [1, 1.75]}
-      gl={{ antialias: true }}
+      gl={{ antialias: false }}
       onCreated={(state) => {
         // debug hook for the visual-verification loop (dev only)
         if (process.env.NODE_ENV !== "production") {
@@ -128,7 +128,7 @@ export default function CoastScene({
           haze; without it the orange sky reads as a hard red fireball. So it runs
           on EVERY tier. The calm savings come from DPR + geometry, not from
           dropping post-processing (mipmapBlur is cheap at the lower DPR). */}
-      <EffectComposer>
+      <EffectComposer multisampling={calm ? 2 : 4}>
         <Bloom intensity={0.5} luminanceThreshold={0.82} luminanceSmoothing={0.3} mipmapBlur />
       </EffectComposer>
     </Canvas>

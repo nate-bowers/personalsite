@@ -43,3 +43,6 @@ next-env.d.ts
 # terrain tile cache (assets in public/terrain are committed)
 /.terrain-cache
 screenshots/*.png
+
+# debug-only terrain render emitted by build:terrain; never served
+public/terrain/terrain-preview.png
