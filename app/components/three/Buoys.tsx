@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import * as THREE from "three";
 import type { Conditions } from "@/lib/ndbc";
 import type { TerrainData, Anchor } from "@/lib/terrain";
@@ -107,6 +107,7 @@ function OneBuoy({
   open: number;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const group = useRef<THREE.Group>(null);
   const labelRef = useRef<HTMLButtonElement>(null);
   const params = oceanParams(conditions);
@@ -127,8 +128,11 @@ function OneBuoy({
     g.quaternion.slerp(targetQ.current, 0.16); // heave + pitch/roll with the wave
   });
 
-  // clarity rule: focus returns to the buoy that opened the panel (3D renderer)
+  // clarity rule: focus returns to the buoy that opened the panel (3D renderer).
+  // Buoys never remount (persistent scene), so key off the pathname returning
+  // to "/" rather than mount.
   useEffect(() => {
+    if (pathname !== "/") return;
     try {
       if (sessionStorage.getItem("lineup-return") === anchor.slug) {
         sessionStorage.removeItem("lineup-return");
@@ -137,7 +141,7 @@ function OneBuoy({
     } catch {
       /* ignore */
     }
-  }, [anchor.slug]);
+  }, [pathname, anchor.slug]);
 
   const openPanel = () => router.push(`/${anchor.slug}`);
   // Warm this station's route on first engagement (hover / press) so its panel

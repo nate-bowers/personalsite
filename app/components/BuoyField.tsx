@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Buoy, { type BuoyDef } from "./Buoy";
 import { useRenderMode } from "./RendererStage";
 import { stationVisible } from "@/lib/visibility";
@@ -22,9 +23,13 @@ const BUOYS: (BuoyDef & { delay: number; left: string; top: string })[] = [
 export default function BuoyField() {
   const ref = useRef<HTMLDivElement>(null);
   const mode = useRenderMode();
+  const pathname = usePathname();
 
-  // When a panel closes, return focus to the buoy that opened it (DESIGN.md clarity #6).
+  // When a panel closes (route returns to "/"), return focus to the buoy that
+  // opened it (DESIGN.md clarity #6). The buoys live in the persistent layout and
+  // never remount, so this keys off the pathname rather than mount.
   useEffect(() => {
+    if (pathname !== "/") return;
     let slug: string | null = null;
     try {
       slug = sessionStorage.getItem("lineup-return");
@@ -35,7 +40,7 @@ export default function BuoyField() {
     if (slug && ref.current) {
       ref.current.querySelector<HTMLElement>(`[data-slug="${slug}"]`)?.focus();
     }
-  }, []);
+  }, [pathname]);
 
   // In the live scene the buoys are 3D; this DOM buoy field is the static fallback.
   if (mode !== "static") return null;

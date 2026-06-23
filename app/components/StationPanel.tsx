@@ -243,7 +243,7 @@ function LiveCamPill({ cam }: { cam: { label: string; href: string } }) {
       </span>
       <span
         className="font-mono text-xs font-medium uppercase tracking-[0.12em]"
-        style={{ color: "var(--accent)" }}
+        style={{ color: "var(--accent-ink)" }}
       >
         {cam.label}
       </span>
@@ -325,7 +325,7 @@ function ResumeView({ content, cam }: { content: StationContent; cam: ReactNode 
             href={content.pdf}
             download
             className="font-mono inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm"
-            style={{ background: "var(--accent)", color: "#fff" }}
+            style={{ background: "var(--accent-ink)", color: "#fff" }}
           >
             ↓ Download resume (PDF)
           </a>
@@ -338,7 +338,7 @@ function ResumeView({ content, cam }: { content: StationContent; cam: ReactNode 
           >
             <p className="font-mono p-4 text-sm" style={{ color: "var(--panel-muted)" }}>
               Your browser can&apos;t display the embedded PDF.{" "}
-              <a href={content.pdf} style={{ color: "var(--accent)" }}>
+              <a href={content.pdf} style={{ color: "var(--accent-ink)" }}>
                 Open it in a new tab.
               </a>
             </p>
@@ -361,7 +361,7 @@ function LinkRow({ links }: { links: { label: string; href: string }[] }) {
             target={external ? "_blank" : undefined}
             rel={external ? "noopener noreferrer" : undefined}
             className="font-mono rounded-md border px-3 py-1.5 text-sm transition-colors hover:border-current"
-            style={{ borderColor: "var(--panel-line)", color: "var(--accent)" }}
+            style={{ borderColor: "var(--panel-line)", color: "var(--accent-ink)" }}
           >
             {l.label}
             {external ? " ↗" : ""}

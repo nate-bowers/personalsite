@@ -19,7 +19,8 @@ body {
   --land-shade: #3d3357; /* shadowed faces */
   --fog: #d9a084;        /* warm atmospheric haze */
   --ink: #fbf3e4;        /* warm off-white text */
-  --accent: #ff7847;     /* buoy orange */
+  --accent: #ff7847;     /* buoy orange (on the dark scene) */
+  --accent-ink: #b23410; /* darker accent for link text/buttons on the light panel paper (AA) */
 
   /* Readable station-report surface for panels (warm paper over the warm scene). */
   --panel-bg: #f7efe3;
@@ -85,7 +86,7 @@ body {
 
 .station-prose h2 { font-family: var(--font-display), Georgia, serif; font-size: 1.55rem; line-height: 1.15; }
 .station-prose h3 { font-weight: 600; font-size: 1.1rem; }
-.station-prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.station-prose a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px; }
 .station-prose ul { list-style: disc; padding-left: 1.25rem; }
 .station-prose li + li { margin-top: 0.3em; }
 .station-prose strong { font-weight: 600; }

@@ -30,7 +30,7 @@ projects:
       - "Live at dailybriefmail.com"
     links:
       - { label: "Live", href: "https://dailybriefmail.com" }
-      - { label: "GitHub (agentmail)", href: "https://github.com/nate-bowers/agentmail" }
+      - { label: "GitHub", href: "https://github.com/nate-bowers/agentmail" }
   - name: SurfScore
     date: Dec 2025
     tagline: "Surf forecasts are noisy, and the NOAA buoys meant to ground them report on their own irregular, gappy intervals while the Open-Meteo forecast feed runs on a regular grid. The real work is reconciling those mismatched timelines into one clean, comparable signal you can actually score a break on."
