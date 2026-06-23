@@ -6,7 +6,7 @@
       "place": "STINSON",
       "lat": 37.9,
       "lng": -122.65200000000002,
-      "x": -5.1,
+      "x": -6.2,
       "z": -5.905,
       "elevMeters": -11,
       "terrainY": -0.018
@@ -17,7 +17,7 @@
       "place": "MAVERICKS",
       "lat": 37.495,
       "lng": -122.503,
-      "x": -1.309,
+      "x": -2.6,
       "z": -2.439,
       "elevMeters": -12,
       "terrainY": -0.019
@@ -39,7 +39,7 @@
       "place": "STEAMER LANE",
       "lat": 36.951,
       "lng": -122.10200000000009,
-      "x": 2.329,
+      "x": 1.0,
       "z": 2.517,
       "elevMeters": -13,
       "terrainY": -0.021
@@ -50,7 +50,7 @@
       "place": "BIG SUR",
       "lat": 36.27,
       "lng": -121.85100000000006,
-      "x": 4.494,
+      "x": 3.1,
       "z": 8.395,
       "elevMeters": -16,
       "terrainY": -0.026
