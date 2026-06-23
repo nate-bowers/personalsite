@@ -13,8 +13,8 @@ import { stationVisible } from "@/lib/visibility";
  * rule #1). Hidden stations (see lib/visibility.ts) drop out.
  */
 const BUOYS: (BuoyDef & { delay: number; left: string; top: string })[] = [
-  { slug: "about", label: "About me", station: "STN 2004", delay: 0.0, left: "15%", top: "26%" },
-  { slug: "projects", label: "Projects", station: "STN 46012", delay: 0.7, left: "43%", top: "12%" },
+  { slug: "about", label: "About me", station: "STN 2004", delay: 0.0, left: "12%", top: "64%" },
+  { slug: "projects", label: "Projects", station: "STN 46012", delay: 0.7, left: "45%", top: "60%" },
   { slug: "ask", label: "Ask Nate", station: "STN 0000", delay: 1.3, left: "70%", top: "26%" },
   { slug: "resume", label: "Resume", station: "STN 2028", delay: 0.4, left: "28%", top: "62%" },
   { slug: "contact", label: "Contact me", station: "STN 1", delay: 1.0, left: "62%", top: "66%" },
