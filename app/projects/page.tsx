@@ -4,7 +4,7 @@ import { getStation } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Projects",
-  description: "Things built to be real on day one: Huberman GPT, dailybriefmail, and SurfScore. Stack, metrics, links.",
+  description: "Things built to be real on day one: Data Investigator Agent, Huberman GPT, dailybriefmail, and SurfScore. Stack, metrics, links.",
 };
 
 export default function ProjectsPage() {

@@ -3,11 +3,22 @@ title: Projects
 station: STN 46012
 established: ""
 location: 37.36°N 122.88°W
-report: "Projects · 3 active projects · all reporting"
+report: "Projects · 4 active projects · all reporting"
 surfCam:
   label: "Mavericks cam"
   href: "https://www.surfline.com/surf-report/maverick-s/5842041f4e65fad6a7708801"
 projects:
+  - name: Data Investigator Agent
+    date: July 2026
+    tagline: "A project in agent loop engineering: an agentic loop that decides each step at runtime, writes and runs its own pandas (sandboxed), self-corrects from errors, and grounds every claim in a result it computed."
+    stack: ["Python", "FastAPI", "Anthropic API", "pandas", "Next.js", "SSE", "Vercel + Render"]
+    metrics:
+      - "Hand-wrote the agent loop over the Anthropic Messages API (no framework): the model chooses each step at runtime, runs a tool, and reads the result fed back, repeating until it self-terminates (3 tools, up to 15 steps per run)."
+      - "Built self-correction into the loop: a failed query's traceback is returned to the model as an error result to read and rewrite from, bounded by a per-step retry cap and loop/token budgets so it never spirals."
+      - "Grounded every conclusion against a computed result (no result, no claim); the model signals its own completion rather than stopping on a counter."
+    links:
+      - { label: "Live", href: "https://investigator.natebowers.dev" }
+      - { label: "GitHub", href: "https://github.com/nate-bowers/data-investigator-agent" }
   - name: Huberman GPT
     date: June 2026
     tagline: "Ask a general chatbot about Huberman's protocols and it will confidently invent half of them. Huberman GPT only answers from what he has actually said, fusing semantic and keyword search so every claim cites the exact moment in the video."
