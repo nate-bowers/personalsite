@@ -11,7 +11,7 @@ projects:
   - name: Data Investigator Agent
     date: July 2026
     tagline: "A project in agent loop engineering: an agentic loop that decides each step at runtime, writes and runs its own pandas (sandboxed), self-corrects from errors, and grounds every claim in a result it computed."
-    stack: ["Python", "FastAPI", "Anthropic API", "pandas", "Next.js", "SSE", "Vercel + Render"]
+    stack: ["Python", "FastAPI", "Anthropic API", "pandas", "Next.js", "Render"]
     metrics:
       - "Hand-wrote the agent loop over the Anthropic Messages API (no framework): the model chooses each step at runtime, runs a tool, and reads the result fed back, repeating until it self-terminates (3 tools, up to 15 steps per run)."
       - "Built self-correction into the loop: a failed query's traceback is returned to the model as an error result to read and rewrite from, bounded by a per-step retry cap and loop/token budgets so it never spirals."
@@ -22,7 +22,7 @@ projects:
   - name: Huberman GPT
     date: June 2026
     tagline: "Ask a general chatbot about Huberman's protocols and it will confidently invent half of them. Huberman GPT only answers from what he has actually said, fusing semantic and keyword search so every claim cites the exact moment in the video."
-    stack: ["Next.js", "TypeScript", "RAG", "Supabase (pgvector)", "Hybrid Search", "Groq", "Vercel"]
+    stack: ["Next.js", "TypeScript", "RAG", "Supabase (pgvector)", "Hybrid Search", "Groq"]
     metrics:
       - "342 episodes · ~800 hours · 7.3M words"
       - "Hybrid retrieval (semantic + keyword) fused with RRF"
@@ -34,7 +34,7 @@ projects:
   - name: dailybriefmail
     date: May 2026
     tagline: "Most AI newsletters are one scheduled blast written for an average reader. dailybriefmail builds one per person: you compose from 22 modules, and each morning a cron job turns your picks into live web-search instructions for Claude, which searches, returns structured JSON, and ships the brief through Resend."
-    stack: ["Next.js", "Supabase", "Claude API", "Resend", "Vercel Cron"]
+    stack: ["Next.js", "Supabase", "Claude API", "Resend", "Cron"]
     metrics:
       - "22 modules to compose from"
       - "A fresh brief per reader, every morning"
